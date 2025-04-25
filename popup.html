@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Songsterr - Random Song</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      width: 320px;
+      margin: 0;
+      padding: 16px;
+      color: #e0e0e0;
+      background-color: #202124;
+      border: 4px solid #8ab4f8;
+    }
+    .header {
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 8px 0;
+      color: #8ab4f8;
+    }
+    .content {
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 16px;
+    }
+    .options-button {
+      background-color: #8ab4f8;
+      color: #202124;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .options-button:hover {
+      background-color: #aecbfa;
+    }
+    .options-panel {
+      background-color: #303134;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      display: none;
+      border: 1px solid #5f6368;
+    }
+    .option-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .key-display {
+      background-color: #3c4043;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin: 0 8px;
+      font-family: monospace;
+      color: #e8eaed;
+    }
+    .change-key-btn {
+      background-color: #5f6368;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #e8eaed;
+    }
+    .change-key-btn:hover {
+      background-color: #7e8183;
+    }
+    .footer {
+      font-size: 12px;
+      color: #9aa0a6;
+      border-top: 1px solid #3c4043;
+      padding-top: 12px;
+      margin-top: 16px;
+    }
+    .footer a {
+      color: #8ab4f8;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+    input[type="checkbox"] {
+      accent-color: #8ab4f8;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Songsterr - Play Random song</h1>
+  </div>
+  
+  <div class="content">
+    Play a random song out of your favorites list on Songsterr by clicking on the Random icon on Songsterr Toolbar or by using "<span id="shortcutKeyDisplay">=</span>" key on your keyboard.
+    <br><br>
+    <strong>Note:</strong> You need to be logged into your Songsterr account and to have songs in your favorites.
+  </div>
+  
+  <button id="optionsBtn" class="options-button">Options</button>
+  
+  <div id="optionsPanel" class="options-panel">
+    <div class="option-row">
+      <span>Currently assigned key:</span>
+      <span id="currentKey" class="key-display">=</span>
+      <button id="changeKeyBtn" class="change-key-btn">Change key</button>
+    </div>
+    <div class="option-row">
+      <input type="checkbox" id="debugMode">
+      <label for="debugMode">Enable debug mode</label>
+    </div>
+  </div>
+  
+  <div class="footer">
+    &copy; Adar Bahar <span id="current-year"></span> | 
+    <a href="https://github.com/adarbahar" target="_blank">Github</a> | 
+    <a href="https://chrome.google.com/webstore/detail/songsterr-random-song/extension-id" target="_blank">Chrome Extension Store</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
