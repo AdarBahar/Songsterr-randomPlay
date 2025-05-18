@@ -54,6 +54,32 @@ This will create:
 - Compiled files in the `dist` directory
 - A ready-to-upload `extension.zip` file
 
+## Packaging for Chrome Web Store Submission
+
+To submit your extension to the Chrome Web Store, you need to create a ZIP file containing the contents of the `dist` directory. Follow these steps:
+
+1. **Build the extension:**
+   ```bash
+   npm run build
+   ```
+
+2. **Ensure `manifest.json` is up to date in `dist`:**
+   If your build process does not automatically copy `manifest.json` to `dist`, copy it manually:
+   ```bash
+   cp manifest.json dist/
+   ```
+
+3. **Create the ZIP file:**
+   Navigate to the `dist` directory and run:
+   ```bash
+   cd dist
+   zip -r ../RandomFavoritePicker.zip . -x '*.DS_Store'
+   ```
+   This will create `RandomFavoritePicker.zip` one level above the `dist` folder.
+
+4. **Submit the ZIP file:**
+   Upload `RandomFavoritePicker.zip` to the Chrome Web Store Developer Dashboard.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

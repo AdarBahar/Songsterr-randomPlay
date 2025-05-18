@@ -12,10 +12,7 @@
         "128": "images/icon128.png"
     },
     "permissions": [
-        "storage",
-        "activeTab",
-        "scripting",
-        "tabs"
+        "storage"
     ],
     "background": {
         "service_worker": "background.js"
