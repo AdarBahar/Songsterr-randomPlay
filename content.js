@@ -8,65 +8,89 @@ const logDebug = (...args) => {
 };
 
 const createRandomButton = () => {
-    // Sanitize text content
-    const sanitizeText = (text) => {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.textContent;
-    };
+    // Strategy 1: Try to clone an existing toolbar item (best styling match)
+    const existingButtons = document.querySelectorAll('a[class*="Gl5"], nav a, header a');
 
-    const button = {
-        link: document.createElement('a'),
-        container: document.createElement('div'),
-        image: document.createElement('img'),
-        text: document.createElement('div')
-    };
+    for (const existingButton of existingButtons) {
+        if (existingButton.querySelector('svg') && existingButton.querySelector('div')) {
+            try {
+                const button = existingButton.cloneNode(true);
 
-    // Setup link
-    Object.assign(button.link, {
-        id: 'random-icon',
-        href: '#',
-        className: 'I1z0'
-    });
-    button.link.style.cssText = 'cursor:pointer;display:block;height:100%;min-width:90px;padding:3px 40px;position:relative;text-decoration:none!important';
+                // Update attributes
+                button.id = 'random-icon';
+                button.href = '#';
+                button.setAttribute('aria-active', 'false');
+                button.title = 'Play Random Song (Shortcut: =)';
 
-    // Setup container
-    button.container.className = 'Bgs1l5';
-    button.container.style.cssText = 'position:relative;min-width:63px;display:block';
+                // Replace SVG content
+                const svg = button.querySelector('svg');
+                if (svg) {
+                    svg.innerHTML = `
+                        <foreignObject width="40" height="40">
+                            <img src="${chrome.runtime.getURL('images/random-48.png')}"
+                                 alt="Random" width="40" height="40"
+                                 style="width: 100%; height: 100%; object-fit: contain;">
+                        </foreignObject>
+                    `;
+                }
 
-    // Setup image
-    Object.assign(button.image, {
-        src: chrome.runtime.getURL('images/random-48.png'),
-        alt: 'Random',
-        width: 40,
-        height: 35,
-        className: 'I1on'
-    });
-    button.image.style.cssText = 'display:block;margin:0 auto';
+                // Update text (find any text-containing div)
+                const textDivs = button.querySelectorAll('div');
+                for (const div of textDivs) {
+                    if (div.textContent && div.textContent.trim() && !div.querySelector('svg, img')) {
+                        div.textContent = 'Random';
+                        break;
+                    }
+                }
 
-    // Setup text
-    button.text.className = 'I11po';
-    button.text.textContent = sanitizeText('Random');
-    button.text.style.cssText = `
-        color:var(--topbar-item-content);
-        font-size:12px;
-        font-weight:500;
-        -webkit-text-stroke:.4px transparent;
-        letter-spacing:.3px;
-        margin-top:2px;
-        overflow:hidden;
-        text-overflow:ellipsis;
-        text-transform:uppercase;
-        transition:all .25s ease-in-out;
-        white-space:nowrap;
-        text-align:center
+                button.addEventListener('click', (e) => e.preventDefault());
+                logDebug('Random button created by cloning existing button');
+                return button;
+            } catch (error) {
+                logDebug('Failed to clone button, trying next one:', error);
+                continue;
+            }
+        }
+    }
+
+    // Strategy 2: Flexible fallback with adaptive styling
+    const button = document.createElement('a');
+    button.id = 'random-icon';
+    button.href = '#';
+    button.title = 'Play Random Song (Shortcut: =)';
+
+    // Try to detect and use existing classes
+    const existingNavItem = document.querySelector('nav a, header a');
+    if (existingNavItem) {
+        button.className = existingNavItem.className;
+    }
+
+    // Create flexible structure that adapts to different layouts
+    button.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; min-height: 60px;">
+            <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
+                <img src="${chrome.runtime.getURL('images/random-48.png')}"
+                     alt="Random" width="32" height="32"
+                     style="display: block; opacity: 0.8; transition: opacity 0.2s;">
+            </div>
+            <div style="font-size: 12px; margin-top: 4px; text-align: center; opacity: 0.9;">Random</div>
+        </div>
     `;
 
-    // Assemble button
-    button.container.appendChild(button.image);
-    button.link.append(button.container, button.text);
+    // Add hover effects
+    button.addEventListener('mouseenter', () => {
+        const img = button.querySelector('img');
+        if (img) img.style.opacity = '1';
+    });
 
-    return button.link;
+    button.addEventListener('mouseleave', () => {
+        const img = button.querySelector('img');
+        if (img) img.style.opacity = '0.8';
+    });
+
+    button.addEventListener('click', (e) => e.preventDefault());
+    logDebug('Random button created with fallback method');
+    return button;
 };
 
 const playRandomSong = async () => {
@@ -142,31 +166,108 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 if (window.location.hostname.includes("songsterr.com")) {
     window.addEventListener('load', async () => {
         await initializeSettings();
-        
-        const topBar = document.querySelector('div.I12xi');
-        if (!topBar) {
-            logDebug('Top bar not found');
-            return;
+
+        // Try multiple selectors for the top bar (Songsterr may have changed their CSS)
+        const topBarSelectors = [
+            'div.I12xi',           // Original selector
+            'nav.Gl54yj',          // Current Songsterr nav element
+            'header.Gl56d3',       // Current Songsterr header element
+            'header.Fbh5d4',       // Current Songsterr header element
+            '.Gl54yj',             // Songsterr nav class
+            '.Gl56d3',             // Songsterr header class
+            '.Fbh5d4',             // Songsterr header class
+            'nav[class*="Gl"]',    // Any nav with Songsterr-style class
+            'header[class*="Gl"]', // Any header with Songsterr-style class
+            'header[class*="Fb"]', // Any header with Songsterr-style class
+            'header nav',          // Common header navigation
+            'nav[role="navigation"]', // Semantic navigation
+            '.navbar',             // Bootstrap-style navbar
+            '.header-nav',         // Common header nav class
+            '.top-nav',            // Common top nav class
+            '.main-nav',           // Common main nav class
+            'div[class*="nav"]',   // Any div with "nav" in class name
+            'div[class*="header"]', // Any div with "header" in class name
+            'div[class*="toolbar"]', // Any div with "toolbar" in class name
+            'div[class*="top"]'    // Any div with "top" in class name
+        ];
+
+        let topBar = null;
+        for (const selector of topBarSelectors) {
+            topBar = document.querySelector(selector);
+            if (topBar) {
+                logDebug('Top bar found with selector:', selector);
+                break;
+            }
         }
 
-        const randomButton = createRandomButton();
-        topBar.appendChild(randomButton);
-        logDebug('Random button added to toolbar');
-
-        // Event listeners
-        randomButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            logDebug('Random button clicked');
-            playRandomSong();
-        });
-
-        // Global keydown listener
+        // Set up keyboard shortcut regardless of whether UI button can be added
         document.addEventListener('keydown', (e) => {
             if (e.key === currentShortcutKey) {
                 e.preventDefault();
                 logDebug('Shortcut key pressed:', currentShortcutKey);
                 playRandomSong();
             }
+        });
+
+        if (!topBar) {
+            logDebug('Top bar not found with any selector. Available elements:');
+            // Log some common elements to help debug
+            const commonElements = document.querySelectorAll('nav, header, div[class*="nav"], div[class*="header"], div[class*="toolbar"]');
+            commonElements.forEach((el, index) => {
+                logDebug(`Element ${index}:`, el.tagName, el.className, el.id);
+            });
+            logDebug('Keyboard shortcut still available:', currentShortcutKey);
+            return;
+        }
+
+        const randomButton = createRandomButton();
+
+        // Try to find the empty div classes next to the logo
+        const emptyDivs = topBar.querySelectorAll('div.Gl5687');
+        const logo = topBar.querySelector('#logo, a[aria-label="Songsterr"]');
+
+        let inserted = false;
+
+        // First try: use the first empty div if available
+        if (emptyDivs.length > 0) {
+            emptyDivs[0].appendChild(randomButton);
+            logDebug('Random button inserted into empty div.Gl5687');
+            inserted = true;
+        }
+        // Second try: insert right after the logo
+        else if (logo && logo.nextSibling) {
+            topBar.insertBefore(randomButton, logo.nextSibling);
+            logDebug('Random button inserted after logo');
+            inserted = true;
+        }
+        // Third try: insert right after the logo (if no next sibling)
+        else if (logo) {
+            logo.insertAdjacentElement('afterend', randomButton);
+            logDebug('Random button inserted adjacent to logo');
+            inserted = true;
+        }
+        // Fallback: insert at the beginning
+        else if (topBar.firstChild) {
+            topBar.insertBefore(randomButton, topBar.firstChild);
+            logDebug('Random button inserted at the beginning of toolbar (fallback)');
+            inserted = true;
+        }
+        // Last resort: append to the end
+        else {
+            topBar.appendChild(randomButton);
+            logDebug('Random button added to empty toolbar (last resort)');
+            inserted = true;
+        }
+
+        if (!inserted) {
+            logDebug('Failed to insert random button');
+        }
+
+        // Event listeners for the UI button
+        randomButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            logDebug('Random button clicked');
+            playRandomSong();
         });
     });
 }
