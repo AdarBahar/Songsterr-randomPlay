@@ -26,6 +26,61 @@ Durable knowledge, decisions, patterns, "how we do things here", and gotchas.
 
 ## Development Patterns
 
+### Caching Strategy (v1.3+)
+**Pattern**: In-memory cache with TTL (Time To Live)
+
+**Implementation**:
+```javascript
+const favoritesCache = {
+  data: null,        // Cached favorites array
+  timestamp: 0,      // When cache was created
+  ttl: 60000        // Cache lifetime (60 seconds)
+};
+```
+
+**Cache Logic**:
+1. Check if cache exists and is fresh: `Date.now() - timestamp < ttl`
+2. If fresh: Return cached data (instant, <10ms)
+3. If stale/missing: Fetch from API, update cache, return data
+
+**Benefits**:
+- Reduces API calls by up to 60x for active users
+- Improves perceived performance (instant on cache hit)
+- Simple implementation, no external dependencies
+- Automatic expiration (no manual invalidation needed)
+
+**Gotchas**:
+- Cache is per-tab (not shared across tabs)
+- Cache clears on page reload
+- 60-second TTL balances freshness vs performance
+- Debug logs show cache age for troubleshooting
+
+### Loading State Pattern (v1.3+)
+**Pattern**: Dismissible notification with lifecycle management
+
+**Implementation**:
+```javascript
+const notification = showNotification("Loading...", "loading", 0);
+try {
+  // Do async work
+} finally {
+  notification.dismiss();  // Always dismiss, even on error
+}
+```
+
+**Key Features**:
+- Returns object with `dismiss()` method
+- Timeout of 0 = manual dismiss only
+- Smooth slide-in/out animations (CSS)
+- Color-coded by type (loading=orange, error=red, success=green)
+- Single dismiss point using `finally` block
+
+**Benefits**:
+- Immediate visual feedback
+- No orphaned notifications (finally ensures cleanup)
+- Consistent UX across all async operations
+- Easy to extend with new notification types
+
 ### Button Creation Strategy
 1. **First try**: Clone existing toolbar button (best styling match)
    - Preserves Songsterr's exact styling and structure
@@ -48,6 +103,31 @@ Durable knowledge, decisions, patterns, "how we do things here", and gotchas.
 - Helps diagnose issues without cluttering console
 - Log key events: button creation, favorites fetch, navigation
 - Log available DOM elements when selectors fail
+- **Cache debugging** (v1.3+): Log cache hits/misses and age
+  - "Fetching fresh favorites from API..." = cache miss
+  - "Using cached favorites, age: X seconds" = cache hit
+  - Helps diagnose performance issues
+
+### Code Documentation (v1.3+)
+**Pattern**: JSDoc comments for all functions
+
+**Format**:
+```javascript
+/**
+ * Brief description of what function does
+ * @param {Type} paramName - Description
+ * @returns {Type} Description
+ * @async (if applicable)
+ */
+```
+
+**Benefits**:
+- Better IDE autocomplete and type hints
+- Easier onboarding for new developers
+- Self-documenting code
+- Helps catch type errors early
+
+**Convention**: Document all functions, even small ones
 
 ---
 
@@ -104,6 +184,36 @@ Durable knowledge, decisions, patterns, "how we do things here", and gotchas.
 - Log errors in debug mode
 - Fail gracefully (keyboard shortcut works even if UI fails)
 - Don't throw errors that break the extension
+- **Use finally for cleanup** (v1.3+): Ensures notifications dismiss even on error
+  ```javascript
+  try {
+    // risky operation
+  } catch (error) {
+    // handle error
+  } finally {
+    // cleanup (dismiss notifications, etc.)
+  }
+  ```
+
+### Refactoring Patterns (v1.3+)
+**Early Returns**: Reduce nesting, improve readability
+```javascript
+// Before
+if (condition) {
+  // lots of code
+} else {
+  return error;
+}
+
+// After (early return)
+if (!condition) return error;
+// lots of code (less indented)
+```
+
+**Single Responsibility**: Each function does one thing
+- `fetchFavorites()` - only fetches and caches
+- `playRandomSong()` - orchestrates the flow
+- `showNotification()` - only handles notifications
 
 ---
 
@@ -120,6 +230,10 @@ Before releasing:
 - [ ] Build and test production bundle
 - [ ] Verify all images load correctly
 - [ ] Check console for errors (with debug mode on)
+- [ ] **Test caching** (v1.3+): Click twice within 1 minute, verify second is instant
+- [ ] **Test loading notification** (v1.3+): Verify appears and dismisses
+- [ ] **Test animations** (v1.3+): Options panel slides smoothly
+- [ ] **Test cache expiration** (v1.3+): Wait 61 seconds, verify cache refreshes
 
 ---
 
@@ -199,7 +313,7 @@ Before releasing:
 - Export/import settings
 
 ### Performance
-- Lazy load settings only when needed
-- Cache favorites list temporarily
+- ✅ Cache favorites list temporarily (implemented in v1.3)
 - Optimize selector matching algorithm
 - Reduce bundle size further
+- Consider IndexedDB for longer-term caching

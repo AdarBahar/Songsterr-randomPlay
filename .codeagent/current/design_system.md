@@ -2,6 +2,53 @@
 
 ## UI Components
 
+### Loading Notifications (v1.3+)
+
+**File**: `content.js`
+
+#### Notification Types
+```javascript
+showNotification(message, type, timeout)
+```
+
+**Types**:
+- `"loading"` - Orange (#FF9800) with hourglass icon ⏳
+- `"error"` - Red (#f44336)
+- `"success"` - Green (#4CAF50)
+- `"info"` - Blue (#2196F3)
+
+#### Styling
+```css
+position: fixed
+top: 20px
+right: 20px
+padding: 12px 20px
+border-radius: 4px
+box-shadow: 0 2px 8px rgba(0,0,0,0.3)
+z-index: 10000
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+font-size: 14px
+max-width: 300px
+```
+
+#### Behavior
+- **Auto-dismiss**: After timeout (if > 0)
+- **Manual dismiss**: Call `notification.dismiss()`
+- **Animations**: Slide-in from right, slide-out to right
+- **Lifecycle**: Created → Shown → Dismissed → Removed from DOM
+
+#### Usage Pattern
+```javascript
+const notification = showNotification("Loading...", "loading", 0);
+try {
+  await doWork();
+} finally {
+  notification.dismiss();  // Always cleanup
+}
+```
+
+---
+
 ### Extension Popup
 
 **File**: `popup.html`
@@ -152,19 +199,47 @@ mouseleave: img.style.opacity = '0.8'
 
 ## Animation & Transitions
 
-### Popup
-- No animations (instant show/hide)
-- Options panel: `display: none/block` (no transition)
+### Popup (v1.3+)
+- **Options Panel**: Smooth slide-down/up animation
+  - `transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out`
+  - Collapsed: `max-height: 0`, `opacity: 0`, `padding: 0`
+  - Expanded: `max-height: 200px`, `opacity: 1`, `padding: 12px`
+  - Class-based state: `.options-panel.open`
+  - Duration: 0.3 seconds
+  - Easing: ease-out (feels natural)
 
 ### Songsterr Button
 - **Hover**: `opacity` transition (0.2s)
 - **Click**: No animation
 - **Injection**: Instant (no fade-in)
 
+### Loading Notifications (v1.3+)
+- **Slide-in**: From right (400px) to position (0)
+  - Animation: `slideInRight 0.3s ease-out`
+  - Opacity: 0 → 1
+- **Slide-out**: From position (0) to right (400px)
+  - Animation: `slideOutRight 0.3s ease-out`
+  - Opacity: 1 → 0
+- **Timing**: 0.3s for both in/out
+- **Trigger**: Auto on timeout or manual via `dismiss()`
+
+### CSS Keyframes (v1.3+)
+```css
+@keyframes slideInRight {
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(400px); opacity: 0; }
+}
+```
+
 ### Future Enhancements
-- Smooth options panel expand/collapse
+- ✅ Smooth options panel expand/collapse (implemented v1.3)
+- ✅ Loading indicator while fetching favorites (implemented v1.3)
 - Button fade-in on injection
-- Loading indicator while fetching favorites
 - Success/error feedback animations
 
 ---
@@ -287,10 +362,11 @@ Fallback positions:
 - **Checkbox**: Chrome default with accent color (#8ab4f8)
 - **Key Capture**: "Press any key..." text + `.listening` class
 
-### Panels
-- **Collapsed**: `display: none`
-- **Expanded**: `display: block`
-- **No transition**: Instant toggle
+### Panels (v1.3+)
+- **Collapsed**: `max-height: 0`, `opacity: 0`, `padding: 0`
+- **Expanded**: `max-height: 200px`, `opacity: 1`, `padding: 12px`
+- **Transition**: Smooth 0.3s ease-out animation
+- **State management**: CSS class `.open` toggles state
 
 ---
 
@@ -323,16 +399,24 @@ Fallback positions:
 ### Popup
 - Add light mode
 - Improve accessibility (ARIA, keyboard nav)
-- Add animations (smooth transitions)
-- Better visual feedback (success/error states)
+- ✅ Add animations (smooth transitions) - implemented v1.3
+- ✅ Better visual feedback (success/error states) - loading notifications v1.3
 - Settings validation feedback
 
 ### Songsterr Button
 - Fade-in animation on injection
-- Loading indicator while fetching
+- ✅ Loading indicator while fetching - implemented v1.3
 - Success animation on navigation
 - Better error handling UI
 - Tooltip improvements
+
+### Notifications (v1.3+)
+- ✅ Dismissible notifications - implemented
+- ✅ Color-coded by type - implemented
+- ✅ Smooth animations - implemented
+- Add notification queue (multiple notifications)
+- Add notification actions (buttons)
+- Add notification icons (beyond hourglass)
 
 ### Overall
 - Design system documentation

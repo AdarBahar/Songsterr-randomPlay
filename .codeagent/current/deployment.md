@@ -89,6 +89,11 @@ npm run compile
 - [ ] Check console for errors (debug mode on)
 - [ ] Review git diff for unintended changes
 - [ ] Update README.md if needed
+- [ ] **Test caching** (v1.3+): Click twice within 1 minute, verify instant second click
+- [ ] **Test loading notification** (v1.3+): Verify appears and dismisses properly
+- [ ] **Test animations** (v1.3+): Options panel slides smoothly
+- [ ] **Test cache expiration** (v1.3+): Wait 61 seconds, verify fresh fetch
+- [ ] Run comprehensive test suite (see TESTING_GUIDE.md)
 
 ### Build for Production
 ```bash
@@ -148,9 +153,9 @@ Follow semantic versioning: `MAJOR.MINOR.PATCH`
 - **MINOR**: New features, backward compatible
 - **PATCH**: Bug fixes, minor improvements
 
-### Current Version: 1.2.0
+### Current Version: 1.3.0
 - Major: 1 (initial release)
-- Minor: 2 (Songsterr layout compatibility fixes)
+- Minor: 3 (performance & UX improvements)
 - Patch: 0
 
 ### Updating Version
@@ -226,9 +231,11 @@ All user settings stored in Chrome sync storage:
 ### Debugging User Issues
 1. Ask user to enable debug mode
 2. Ask user to check console for `[Debug]` messages
-3. Ask for Chrome version and OS
-4. Ask for screenshot of Songsterr page
-5. Test on same Songsterr page if possible
+3. **Check cache logs** (v1.3+): Look for "Using cached favorites" or "Fetching fresh"
+4. Ask for Chrome version and OS
+5. Ask for screenshot of Songsterr page
+6. Test on same Songsterr page if possible
+7. **Performance issues**: Check if caching is working (should see cache age in logs)
 
 ---
 
