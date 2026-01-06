@@ -1,9 +1,11 @@
-# Testing Guide for v1.2.1
+# Testing Guide for v1.3.0
 
 ## Build Status
-✅ Build completed successfully
+✅ Build completed successfully (Phase 2)
 - Location: `dist/` folder
 - Files: background.js, content.js, popup.js, popup.html, manifest.json, images/
+- Version: 1.3.0
+- New Features: Loading states, caching, animations, JSDoc
 
 ## Loading the Extension
 
@@ -21,9 +23,83 @@
 
 ---
 
-## Test Checklist
+## Phase 2 New Features Test Checklist
 
-### ✅ Test 1: Keyboard Shortcut in Input Fields
+### ✅ Test 1: Loading Notification
+**What to test**: Loading notification appears while fetching favorites
+
+**Steps**:
+1. Go to https://www.songsterr.com (logged in with favorites)
+2. Click the Random button (or press shortcut)
+3. **Expected**: Orange notification appears in top-right saying "Loading favorites... ⏳"
+4. **Expected**: Notification dismisses when song loads
+5. Try again - notification should appear each time
+
+**Pass criteria**:
+- Orange notification with hourglass appears immediately
+- Notification dismisses automatically when navigation starts
+- Smooth slide-in animation from right
+
+---
+
+### ✅ Test 2: Favorites Caching (Performance)
+**What to test**: Second click within 1 minute uses cache (instant)
+
+**Steps**:
+1. Go to Songsterr.com (logged in with favorites)
+2. Enable debug mode in extension popup
+3. Open DevTools Console (F12)
+4. Click Random button - note the time it takes
+5. **Expected**: Console shows "Fetching fresh favorites from API..."
+6. Immediately click Random button again (within 1 minute)
+7. **Expected**: Console shows "Using cached favorites, age: X seconds"
+8. **Expected**: Second click is noticeably faster (instant)
+
+**Pass criteria**:
+- First click fetches from API (slower)
+- Second click uses cache (instant, <10ms)
+- Debug logs show cache age
+- Cache works for 60 seconds
+
+---
+
+### ✅ Test 3: Cache Expiration
+**What to test**: Cache expires after 1 minute and refreshes
+
+**Steps**:
+1. Enable debug mode
+2. Open DevTools Console
+3. Click Random button - see "Fetching fresh favorites..."
+4. Wait exactly 61 seconds
+5. Click Random button again
+6. **Expected**: Console shows "Fetching fresh favorites..." (cache expired)
+
+**Pass criteria**: Cache automatically expires and refreshes after 60 seconds
+
+---
+
+### ✅ Test 4: Options Panel Animation
+**What to test**: Smooth slide-down/up animation in popup
+
+**Steps**:
+1. Click extension icon to open popup
+2. Click "Options" button
+3. **Expected**: Panel slides down smoothly (not instant)
+4. Click "Close Options"
+5. **Expected**: Panel slides up smoothly
+6. Repeat several times
+
+**Pass criteria**:
+- Smooth animation (0.3s duration)
+- No jerky movements
+- Opacity fades in/out
+- Height animates smoothly
+
+---
+
+## Phase 1 Regression Tests
+
+### ✅ Test 5: Keyboard Shortcut in Input Fields
 **What to test**: Shortcut should NOT trigger when typing in input fields
 
 **Steps**:
@@ -37,7 +113,7 @@
 
 ---
 
-### ✅ Test 2: Error Notifications - Not Logged In
+### ✅ Test 6: Error Notifications - Not Logged In
 **What to test**: User sees notification when not logged in
 
 **Steps**:
@@ -51,7 +127,7 @@
 
 ---
 
-### ✅ Test 3: Error Notifications - No Favorites
+### ✅ Test 7: Error Notifications - No Favorites
 **What to test**: User sees notification when they have no favorites
 
 **Steps**:
@@ -64,7 +140,7 @@
 
 ---
 
-### ✅ Test 4: Dynamic Tooltip
+### ✅ Test 8: Dynamic Tooltip
 **What to test**: Button tooltip shows current shortcut and updates dynamically
 
 **Steps**:
@@ -79,7 +155,7 @@
 
 ---
 
-### ✅ Test 5: Modifier Keys Don't Trigger
+### ✅ Test 9: Modifier Keys Don't Trigger
 **What to test**: Shortcut doesn't trigger with Ctrl/Alt/Meta modifiers
 
 **Steps**:
@@ -92,7 +168,7 @@
 
 ---
 
-### ✅ Test 6: Console Errors
+### ✅ Test 10: Console Errors
 **What to test**: No JavaScript errors in console
 
 **Steps**:
@@ -107,7 +183,7 @@
 
 ---
 
-### ✅ Test 7: Happy Path - Random Song Works
+### ✅ Test 11: Happy Path - Random Song Works
 **What to test**: Extension still works correctly for normal use
 
 **Steps**:
