@@ -70,7 +70,7 @@
       font-family: monospace;
       color: #e8eaed;
     }
-    .change-key-btn {
+    .change-key-btn, .clear-cache-btn {
       background-color: #5f6368;
       border: none;
       padding: 4px 8px;
@@ -79,8 +79,13 @@
       font-size: 12px;
       color: #e8eaed;
     }
-    .change-key-btn:hover {
+    .change-key-btn:hover, .clear-cache-btn:hover {
       background-color: #7e8183;
+    }
+    .clear-cache-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 6px 12px;
     }
     .footer {
       font-size: 12px;
@@ -123,6 +128,9 @@
     <div class="option-row">
       <input type="checkbox" id="debugMode">
       <label for="debugMode">Enable debug mode</label>
+    </div>
+    <div class="option-row">
+      <button id="clearCacheBtn" class="clear-cache-btn">Clear Cache & History</button>
     </div>
   </div>
   

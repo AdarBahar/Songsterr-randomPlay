@@ -1,8 +1,54 @@
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Cache time-to-live in milliseconds (1 minute) */
+const CACHE_TTL_MS = 60000;
+
+/** Default notification duration in milliseconds */
+const NOTIFICATION_DURATION_MS = 3000;
+
+/** Notification animation duration in milliseconds */
+const NOTIFICATION_ANIMATION_MS = 300;
+
+/** Notification position from top in pixels */
+const NOTIFICATION_TOP_PX = 20;
+
+/** Notification position from right in pixels */
+const NOTIFICATION_RIGHT_PX = 20;
+
+/** Notification max width in pixels */
+const NOTIFICATION_MAX_WIDTH_PX = 300;
+
+/** Notification z-index */
+const NOTIFICATION_Z_INDEX = 10000;
+
+/** Animation slide distance in pixels */
+const SLIDE_DISTANCE_PX = 400;
+
+/** Default keyboard shortcut */
+const DEFAULT_SHORTCUT_KEY = '=';
+
+/** Maximum song history size (to avoid repeats) */
+const MAX_SONG_HISTORY = 10;
+
+/** Notification colors by type */
+const NOTIFICATION_COLORS = {
+    error: '#f44336',
+    success: '#4CAF50',
+    info: '#2196F3',
+    loading: '#FF9800'
+};
+
+// ============================================================================
+// STATE
+// ============================================================================
+
 /** @type {boolean} Debug mode flag */
 let isDebugMode = false;
 
 /** @type {string} Current keyboard shortcut key */
-let currentShortcutKey = '=';
+let currentShortcutKey = DEFAULT_SHORTCUT_KEY;
 
 /**
  * Cache for favorites to reduce API calls
@@ -11,8 +57,14 @@ let currentShortcutKey = '=';
 let favoritesCache = {
     data: null,
     timestamp: 0,
-    ttl: 60000 // 1 minute cache
+    ttl: CACHE_TTL_MS
 };
+
+/**
+ * History of recently played song URLs to avoid immediate repeats
+ * @type {Array<string>}
+ */
+let songHistory = [];
 
 /**
  * Logs debug messages to console when debug mode is enabled
@@ -31,31 +83,24 @@ const logDebug = (...args) => {
  * @param {number} duration - Duration in ms (0 = no auto-dismiss, for loading states)
  * @returns {Object} Notification element with dismiss() method
  */
-const showNotification = (message, type = 'info', duration = 3000) => {
+const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATION_MS) => {
     const notification = document.createElement('div');
     notification.textContent = message;
 
-    const colors = {
-        error: '#f44336',
-        success: '#4CAF50',
-        info: '#2196F3',
-        loading: '#FF9800'
-    };
-
     notification.style.cssText = `
         position: fixed;
-        top: 20px;
-        right: 20px;
+        top: ${NOTIFICATION_TOP_PX}px;
+        right: ${NOTIFICATION_RIGHT_PX}px;
         padding: 12px 20px;
-        background: ${colors[type] || colors.info};
+        background: ${NOTIFICATION_COLORS[type] || NOTIFICATION_COLORS.info};
         color: white;
         border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        z-index: 10000;
+        z-index: ${NOTIFICATION_Z_INDEX};
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         font-size: 14px;
-        max-width: 300px;
-        animation: slideInRight 0.3s ease-out;
+        max-width: ${NOTIFICATION_MAX_WIDTH_PX}px;
+        animation: slideInRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out;
     `;
 
     // Add loading spinner for loading type
@@ -72,7 +117,7 @@ const showNotification = (message, type = 'info', duration = 3000) => {
         style.textContent = `
             @keyframes slideInRight {
                 from {
-                    transform: translateX(400px);
+                    transform: translateX(${SLIDE_DISTANCE_PX}px);
                     opacity: 0;
                 }
                 to {
@@ -86,7 +131,7 @@ const showNotification = (message, type = 'info', duration = 3000) => {
                     opacity: 1;
                 }
                 to {
-                    transform: translateX(400px);
+                    transform: translateX(${SLIDE_DISTANCE_PX}px);
                     opacity: 0;
                 }
             }
@@ -100,8 +145,8 @@ const showNotification = (message, type = 'info', duration = 3000) => {
     let timeoutId = null;
     if (duration > 0) {
         timeoutId = setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
+            notification.style.animation = `slideOutRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out`;
+            setTimeout(() => notification.remove(), NOTIFICATION_ANIMATION_MS);
         }, duration);
     }
 
@@ -110,8 +155,8 @@ const showNotification = (message, type = 'info', duration = 3000) => {
         element: notification,
         dismiss: () => {
             if (timeoutId) clearTimeout(timeoutId);
-            notification.style.animation = 'slideOutRight 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
+            notification.style.animation = `slideOutRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out`;
+            setTimeout(() => notification.remove(), NOTIFICATION_ANIMATION_MS);
         }
     };
 };
@@ -249,16 +294,68 @@ const fetchFavorites = async () => {
 };
 
 /**
+ * Adds a song URL to the history to avoid immediate repeats
+ * Maintains a maximum history size
+ * @param {string} songUrl - The URL of the song to add to history
+ */
+const addToSongHistory = (songUrl) => {
+    songHistory.push(songUrl);
+    if (songHistory.length > MAX_SONG_HISTORY) {
+        songHistory.shift(); // Remove oldest entry
+    }
+    logDebug('Song history updated:', songHistory.length, 'songs');
+};
+
+/**
+ * Checks if a song is in the recent history
+ * @param {string} songUrl - The URL to check
+ * @returns {boolean} True if song is in recent history
+ */
+const isInRecentHistory = (songUrl) => {
+    return songHistory.includes(songUrl);
+};
+
+/**
+ * Selects a random song from favorites, avoiding recent history if possible
+ * @param {Array} favoriteSongs - Array of favorite song elements
+ * @returns {HTMLElement|null} Selected song element or null if none available
+ */
+const selectRandomSong = (favoriteSongs) => {
+    // Filter out songs in recent history
+    const availableSongs = favoriteSongs.filter(song => !isInRecentHistory(song.href));
+
+    // If all songs are in history (or very few favorites), use all songs
+    const songsToChooseFrom = availableSongs.length > 0 ? availableSongs : favoriteSongs;
+
+    if (availableSongs.length === 0 && favoriteSongs.length > 0) {
+        logDebug('All songs in history, choosing from all favorites');
+    } else if (availableSongs.length < favoriteSongs.length) {
+        logDebug(`Filtered ${favoriteSongs.length - availableSongs.length} songs from history`);
+    }
+
+    return songsToChooseFrom[Math.floor(Math.random() * songsToChooseFrom.length)];
+};
+
+/**
  * Plays a random song from user's favorites
  * Shows loading state and handles errors with user notifications
+ * Avoids playing recently played songs when possible
  * @async
+ * @param {boolean} forceRefresh - If true, bypasses cache and clears history
  * @returns {Promise<void>}
  */
-const playRandomSong = async () => {
+const playRandomSong = async (forceRefresh = false) => {
     // Show loading notification
     const loadingNotification = showNotification('Loading favorites...', 'loading', 0);
 
     try {
+        // Clear cache and history if force refresh
+        if (forceRefresh) {
+            favoritesCache.data = null;
+            songHistory = [];
+            logDebug('Force refresh: cache and history cleared');
+        }
+
         const favoriteSongs = await fetchFavorites();
         logDebug('Found favorite songs:', favoriteSongs.length);
 
@@ -268,7 +365,13 @@ const playRandomSong = async () => {
             return;
         }
 
-        const randomSong = favoriteSongs[Math.floor(Math.random() * favoriteSongs.length)];
+        const randomSong = selectRandomSong(favoriteSongs);
+        if (!randomSong) {
+            showNotification('No songs available', 'error');
+            logDebug('No songs available after filtering');
+            return;
+        }
+
         const url = new URL(randomSong.href);
 
         if (url.hostname !== 'www.songsterr.com') {
@@ -276,6 +379,9 @@ const playRandomSong = async () => {
             logDebug('Invalid hostname:', url.hostname);
             return;
         }
+
+        // Add to history before navigating
+        addToSongHistory(randomSong.href);
 
         logDebug('Navigating to random song:', randomSong.href);
         window.location.href = randomSong.href;
@@ -325,7 +431,7 @@ const initializeSettings = async () => {
     }
 };
 
-// Listen for settings changes
+// Listen for settings changes and commands
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'settingsChanged' && message.settings) {
         if (typeof message.settings.shortcutKey !== 'undefined') {
@@ -342,45 +448,121 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             isDebugMode = message.settings.debug;
             logDebug('Debug mode updated to:', isDebugMode);
         }
+    } else if (message.action === 'clearCacheAndHistory') {
+        // Clear favorites cache and song history
+        favoritesCache.data = null;
+        favoritesCache.timestamp = 0;
+        songHistory = [];
+        logDebug('Cache and history cleared via popup');
+        showNotification('Cache and history cleared!', 'success', 2000);
+        sendResponse({ success: true });
     }
 });
+
+/**
+ * Toolbar selectors to try for finding the Songsterr toolbar
+ * @type {Array<string>}
+ */
+const TOOLBAR_SELECTORS = [
+    'div.I12xi',           // Original selector
+    'nav.Gl54yj',          // Current Songsterr nav element
+    'header.Gl56d3',       // Current Songsterr header element
+    'header.Fbh5d4',       // Current Songsterr header element
+    '.Gl54yj',             // Songsterr nav class
+    '.Gl56d3',             // Songsterr header class
+    '.Fbh5d4',             // Songsterr header class
+    'nav[class*="Gl"]',    // Any nav with Songsterr-style class
+    'header[class*="Gl"]', // Any header with Songsterr-style class
+    'header[class*="Fb"]', // Any header with Songsterr-style class
+    'header nav',          // Common header navigation
+    'nav[role="navigation"]', // Semantic navigation
+    '.navbar',             // Bootstrap-style navbar
+    '.header-nav',         // Common header nav class
+    '.top-nav',            // Common top nav class
+    '.main-nav',           // Common main nav class
+    'div[class*="nav"]',   // Any div with "nav" in class name
+    'div[class*="header"]', // Any div with "header" in class name
+    'div[class*="toolbar"]', // Any div with "toolbar" in class name
+    'div[class*="top"]'    // Any div with "top" in class name
+];
+
+/**
+ * Attempts to find the toolbar using multiple selectors
+ * @returns {HTMLElement|null} The toolbar element or null if not found
+ */
+const findToolbar = () => {
+    for (const selector of TOOLBAR_SELECTORS) {
+        const element = document.querySelector(selector);
+        if (element) {
+            logDebug('Toolbar found with selector:', selector);
+            return element;
+        }
+    }
+    return null;
+};
+
+/**
+ * Injects the random button into the toolbar
+ * @param {HTMLElement} toolbar - The toolbar element to inject into
+ * @returns {boolean} True if injection was successful
+ */
+const injectRandomButton = (toolbar) => {
+    // Check if button already exists
+    if (document.getElementById('random-icon')) {
+        logDebug('Random button already exists');
+        return true;
+    }
+
+    const randomButton = createRandomButton();
+    if (!randomButton) {
+        logDebug('Failed to create random button');
+        return false;
+    }
+
+    randomButton.addEventListener('click', () => {
+        logDebug('Random button clicked');
+        playRandomSong();
+    });
+
+    toolbar.appendChild(randomButton);
+    logDebug('Random button injected successfully');
+    return true;
+};
+
+/**
+ * Sets up a MutationObserver to watch for toolbar appearance
+ * Useful for SPAs where the toolbar may load after initial page load
+ * @returns {MutationObserver} The observer instance
+ */
+const setupToolbarObserver = () => {
+    let hasInjected = false;
+
+    const observer = new MutationObserver((mutations) => {
+        if (hasInjected) return;
+
+        const toolbar = findToolbar();
+        if (toolbar) {
+            if (injectRandomButton(toolbar)) {
+                hasInjected = true;
+                observer.disconnect();
+                logDebug('Toolbar observer disconnected after successful injection');
+            }
+        }
+    });
+
+    // Observe the entire document for changes
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    logDebug('Toolbar observer set up');
+    return observer;
+};
 
 if (window.location.hostname.includes("songsterr.com")) {
     window.addEventListener('load', async () => {
         await initializeSettings();
-
-        // Try multiple selectors for the top bar (Songsterr may have changed their CSS)
-        const topBarSelectors = [
-            'div.I12xi',           // Original selector
-            'nav.Gl54yj',          // Current Songsterr nav element
-            'header.Gl56d3',       // Current Songsterr header element
-            'header.Fbh5d4',       // Current Songsterr header element
-            '.Gl54yj',             // Songsterr nav class
-            '.Gl56d3',             // Songsterr header class
-            '.Fbh5d4',             // Songsterr header class
-            'nav[class*="Gl"]',    // Any nav with Songsterr-style class
-            'header[class*="Gl"]', // Any header with Songsterr-style class
-            'header[class*="Fb"]', // Any header with Songsterr-style class
-            'header nav',          // Common header navigation
-            'nav[role="navigation"]', // Semantic navigation
-            '.navbar',             // Bootstrap-style navbar
-            '.header-nav',         // Common header nav class
-            '.top-nav',            // Common top nav class
-            '.main-nav',           // Common main nav class
-            'div[class*="nav"]',   // Any div with "nav" in class name
-            'div[class*="header"]', // Any div with "header" in class name
-            'div[class*="toolbar"]', // Any div with "toolbar" in class name
-            'div[class*="top"]'    // Any div with "top" in class name
-        ];
-
-        let topBar = null;
-        for (const selector of topBarSelectors) {
-            topBar = document.querySelector(selector);
-            if (topBar) {
-                logDebug('Top bar found with selector:', selector);
-                break;
-            }
-        }
 
         // Set up keyboard shortcut regardless of whether UI button can be added
         document.addEventListener('keydown', (e) => {
@@ -394,67 +576,37 @@ if (window.location.hostname.includes("songsterr.com")) {
                 return;
             }
 
-            // Only trigger if no modifier keys are pressed (to avoid conflicts)
-            if (e.key === currentShortcutKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
-                e.preventDefault();
-                logDebug('Shortcut key pressed:', currentShortcutKey);
-                playRandomSong();
+            // Check if the shortcut key is pressed
+            if (e.key === currentShortcutKey) {
+                // Shift + key = force refresh (clear cache and history)
+                if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                    e.preventDefault();
+                    logDebug('Shift + shortcut key pressed: force refresh');
+                    showNotification('Refreshing favorites and clearing history...', 'info', 1500);
+                    playRandomSong(true); // Force refresh
+                }
+                // Just the key (no modifiers) = normal random play
+                else if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
+                    e.preventDefault();
+                    logDebug('Shortcut key pressed:', currentShortcutKey);
+                    playRandomSong();
+                }
+                // Other modifier combinations are ignored to avoid conflicts
             }
         });
 
-        if (!topBar) {
-            logDebug('Top bar not found with any selector. Available elements:');
-            // Log some common elements to help debug
-            const commonElements = document.querySelectorAll('nav, header, div[class*="nav"], div[class*="header"], div[class*="toolbar"]');
-            commonElements.forEach((el, index) => {
-                logDebug(`Element ${index}:`, el.tagName, el.className, el.id);
-            });
-            logDebug('Keyboard shortcut still available:', currentShortcutKey);
-            return;
+        // Try to find and inject button into toolbar
+        const toolbar = findToolbar();
+        if (toolbar) {
+            injectRandomButton(toolbar);
+        } else {
+            // Toolbar not found immediately, set up observer to watch for it
+            logDebug('Toolbar not found on load, setting up observer');
+            setupToolbarObserver();
         }
 
-        const randomButton = createRandomButton();
-
-        // Try to find the empty div classes next to the logo
-        const emptyDivs = topBar.querySelectorAll('div.Gl5687');
-        const logo = topBar.querySelector('#logo, a[aria-label="Songsterr"]');
-
-        let inserted = false;
-
-        // First try: use the first empty div if available
-        if (emptyDivs.length > 0) {
-            emptyDivs[0].appendChild(randomButton);
-            logDebug('Random button inserted into empty div.Gl5687');
-            inserted = true;
-        }
-        // Second try: insert right after the logo
-        else if (logo && logo.nextSibling) {
-            topBar.insertBefore(randomButton, logo.nextSibling);
-            logDebug('Random button inserted after logo');
-            inserted = true;
-        }
-        // Third try: insert right after the logo (if no next sibling)
-        else if (logo) {
-            logo.insertAdjacentElement('afterend', randomButton);
-            logDebug('Random button inserted adjacent to logo');
-            inserted = true;
-        }
-        // Fallback: insert at the beginning
-        else if (topBar.firstChild) {
-            topBar.insertBefore(randomButton, topBar.firstChild);
-            logDebug('Random button inserted at the beginning of toolbar (fallback)');
-            inserted = true;
-        }
-        // Last resort: append to the end
-        else {
-            topBar.appendChild(randomButton);
-            logDebug('Random button added to empty toolbar (last resort)');
-            inserted = true;
-        }
-
-        if (!inserted) {
-            logDebug('Failed to insert random button');
-        }
+        // Always log keyboard shortcut availability
+        logDebug('Keyboard shortcut available:', currentShortcutKey, '(Shift+key for force refresh)');
 
         // Event listeners for the UI button
         randomButton.addEventListener('click', (e) => {

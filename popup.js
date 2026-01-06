@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
         shortcutKeyDisplay: document.getElementById('shortcutKeyDisplay'),
         optionsBtn: document.getElementById('optionsBtn'),
         optionsPanel: document.getElementById('optionsPanel'),
-        currentYear: document.getElementById('current-year')
+        currentYear: document.getElementById('current-year'),
+        clearCacheBtn: document.getElementById('clearCacheBtn')
     };
 
     let isListening = false;
@@ -104,5 +105,30 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         document.addEventListener('keydown', handleKeyPress);
+    });
+
+    // Clear cache and history button handler
+    elements.clearCacheBtn.addEventListener('click', () => {
+        // Send message to all tabs to clear cache and history
+        chrome.tabs.query({}, (tabs) => {
+            tabs.forEach(tab => {
+                chrome.tabs.sendMessage(tab.id, { action: 'clearCacheAndHistory' }, () => {
+                    // Ignore errors for tabs that don't have the content script
+                    if (chrome.runtime.lastError) {
+                        // Silent fail - expected for non-Songsterr tabs
+                    }
+                });
+            });
+        });
+
+        // Visual feedback
+        const originalText = elements.clearCacheBtn.textContent;
+        elements.clearCacheBtn.textContent = 'Cleared! ✓';
+        elements.clearCacheBtn.style.backgroundColor = '#4CAF50';
+
+        setTimeout(() => {
+            elements.clearCacheBtn.textContent = originalText;
+            elements.clearCacheBtn.style.backgroundColor = '';
+        }, 2000);
     });
 });
