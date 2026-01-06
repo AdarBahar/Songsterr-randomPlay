@@ -4,6 +4,100 @@ Entries are added in reverse chronological order.
 
 ---
 
+## 2026-01-06: Bug Fixes & UI Improvements (v1.4.1)
+**Branch**: main
+**Commits**: 1c99cc4, d859740, 24987cf, 5ade1b3, e5ad509, 906956d
+
+### Summary
+Fixed critical bugs and completely redesigned the popup UI for better user experience. Improved notification system with vertical stacking and smooth transitions.
+
+### Key Changes
+
+**content.js**:
+- **Notification Stacking**: Changed from single notification to vertical stack
+  - `activeNotification` → `activeNotifications` array
+  - Calculate top position based on existing notifications
+  - Stack vertically with 10px gap between notifications
+  - `updateNotificationPositions()` function for smooth repositioning
+  - CSS transition for top position changes (0.3s ease-out)
+  - Each notification has full display time (readable)
+  - Smooth slide-up when notifications dismiss
+- **Scope Fix**: Moved `timeoutId` declaration before `notificationObj` to fix ReferenceError
+- **Button Placement**: Improved selector to place button next to Songsterr logo
+  - Better visual integration with toolbar
+  - More consistent placement across page states
+
+**popup.html**:
+- **Complete Redesign**: Modern, professional UI with gradient background
+  - Width: 320px → 380px (better readability)
+  - Gradient background: `linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)`
+  - Card-based layout with subtle borders and shadows
+  - Better typography hierarchy
+- **New Layout Structure** (top to bottom):
+  1. Header: Logo emoji (🎸), title, subtitle
+  2. Reminder: Positive blue message (💡) instead of red warning
+  3. Keyboard Shortcuts: Visual kbd elements showing keys
+  4. Settings: Collapsible panel with descriptions
+  5. Features: "What it does" section with bullet points
+  6. Footer: Compact, always visible
+- **Visual Keyboard Keys**: Styled as actual keyboard buttons
+  - Gradient background, border, shadow
+  - Monospace font, bold
+  - Shows both normal key and Shift+key combo
+- **Improved Settings Panel**:
+  - Each option has descriptive label and help text
+  - Better spacing and visual hierarchy
+  - Danger button (red) for clear cache
+  - Checkbox wrapper with hover effect
+- **Compact Footer**:
+  - Font size: 11px → 10px
+  - Padding: 16px → 8px
+  - Minimal height to save space
+  - Always visible (not hidden)
+
+**popup.js**:
+- Added `shortcutKeyDisplay2` element for Shift+key display
+- Updated button text: "Options" → "⚙️ Settings"
+- Updated clear cache button feedback (green background)
+- Maintained all existing functionality
+
+### Reasoning
+- **Bug Fixes**: Duplicate listener and scope issues were breaking functionality
+- **Notification Stacking**: Users couldn't read messages when they appeared/disappeared too quickly
+- **Popup Redesign**: Old design was text-heavy and unclear about features
+- **Layout Reorganization**: Put most important info (requirements) at top
+- **Positive Tone**: Changed warning to helpful reminder for better UX
+
+### Impact
+- **User Experience**: Significantly improved clarity and visual appeal
+- **Readability**: All notifications visible long enough to read
+- **Information Architecture**: Better flow from critical to optional info
+- **Accessibility**: Better contrast, larger touch targets, clear labels
+- **Bundle Size**: popup.html +7KB (better UX worth the trade-off)
+
+### Testing
+- [x] Reload extension, verify modern popup design
+- [x] Shift+click Random button, verify both notifications visible
+- [x] Verify notifications stack vertically with smooth transitions
+- [x] Verify button placement next to logo
+- [x] Verify all settings work (keyboard shortcut, debug mode, clear cache)
+- [x] Verify footer is compact and always visible
+- [x] Build successful, no errors
+
+### Deployment Notes
+- No breaking changes
+- No new permissions required
+- No database/API changes
+- Safe to deploy immediately
+
+### Next Steps
+- Update version to 1.4.1 in manifest.json and package.json
+- Build production bundle
+- Submit to Chrome Web Store
+- Update README with new screenshots
+
+---
+
 ## 2026-01-06: Phase 2 Performance & UX Improvements (v1.3.0)
 **Branch**: main
 **Commit**: 8aa287e

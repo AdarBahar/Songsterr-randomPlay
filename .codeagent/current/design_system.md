@@ -53,62 +53,110 @@ try {
 
 **File**: `popup.html`
 
-#### Color Palette
+#### Color Palette (v1.4.1+)
 ```css
-/* Dark theme (matches Chrome extension style) */
---background: #202124
---surface: #303134
---border: #5f6368
---border-accent: #8ab4f8
---text-primary: #e0e0e0
---text-secondary: #9aa0a6
+/* Modern gradient background */
+--background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)
+--surface: rgba(48, 49, 52, 0.6)
+--border: rgba(138, 180, 248, 0.15)
+--border-accent: rgba(138, 180, 248, 0.3)
+--text-primary: #e8eaed
+--text-secondary: #bdc1c6
+--text-muted: #9aa0a6
 --accent: #8ab4f8
 --accent-hover: #aecbfa
---button-bg: #5f6368
---button-hover: #7e8183
---code-bg: #3c4043
+--accent-bg: rgba(138, 180, 248, 0.15)
+--button-primary: linear-gradient(180deg, #8ab4f8 0%, #7ba3e8 100%)
+--button-primary-hover: linear-gradient(180deg, #aecbfa 0%, #8ab4f8 100%)
+--button-secondary: #5f6368
+--button-secondary-hover: #7e8183
+--button-danger: #d93025
+--button-danger-hover: #ea4335
+--button-success: #34a853
+--kbd-bg: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%)
+--kbd-border: #5f6368
 ```
 
-#### Typography
-- **Font Family**: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
-- **Heading (h1)**: 18px, color: #8ab4f8
-- **Body**: 14px, line-height: 1.4, color: #e0e0e0
-- **Footer**: 12px, color: #9aa0a6
-- **Code/Key Display**: monospace, color: #e8eaed
+#### Typography (v1.4.1+)
+- **Font Family**: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif
+- **Heading (h1)**: 20px, font-weight: 600, color: #8ab4f8, letter-spacing: -0.5px
+- **Subtitle**: 13px, color: #9aa0a6
+- **Section Title**: 14px, font-weight: 600, color: #8ab4f8
+- **Body**: 13px, line-height: 1.6, color: #bdc1c6
+- **Footer**: 10px, color: #9aa0a6, line-height: 1.4
+- **Code/Key Display**: 'Courier New', monospace, 13-14px, font-weight: 600, color: #e8eaed
 
-#### Layout
-- **Popup Width**: 320px
-- **Padding**: 16px
-- **Border**: 4px solid #8ab4f8
-- **Border Radius**: 4px (buttons), 3px (small elements)
+#### Layout (v1.4.1+)
+- **Popup Width**: 380px (increased from 320px)
+- **Container Padding**: 20px
+- **Section Spacing**: 16px
+- **Border Radius**: 8px (cards), 6px (buttons), 4px (small elements)
+- **Card Padding**: 16px
+- **Card Border**: 1px solid rgba(138, 180, 248, 0.15)
 
-#### Buttons
+#### Buttons (v1.4.1+)
 ```css
-/* Primary Button (Options) */
-background: #8ab4f8
-color: #202124
-padding: 8px 12px
-border-radius: 4px
-font-weight: 500
+/* Primary Button (Settings Toggle) */
+background: linear-gradient(180deg, #8ab4f8 0%, #7ba3e8 100%)
+color: #1a1a2e
+padding: 12px
+border-radius: 6px
+font-size: 14px
+font-weight: 600
+box-shadow: 0 2px 6px rgba(138, 180, 248, 0.3)
+transition: all 0.2s ease
 
-/* Secondary Button (Change Key, Clear Cache) */
+/* Primary Hover */
+background: linear-gradient(180deg, #aecbfa 0%, #8ab4f8 100%)
+box-shadow: 0 4px 8px rgba(138, 180, 248, 0.4)
+transform: translateY(-1px)
+
+/* Secondary Button (Change Key) */
 background: #5f6368
 color: #e8eaed
-padding: 4px 8px
-border-radius: 3px
-font-size: 12px
-
-/* Clear Cache Button (v1.4+) */
-width: 100%
-margin-top: 8px
 padding: 6px 12px
-/* Success state: background: #4CAF50 */
+border-radius: 4px
+font-size: 12px
+font-weight: 500
+transition: all 0.2s ease
+
+/* Danger Button (Clear Cache) */
+background: #d93025
+color: white
+padding: 10px 12px
+border-radius: 4px
+font-size: 13px
+font-weight: 500
+width: 100%
+transition: all 0.2s ease
+
+/* Danger Hover */
+background: #ea4335
+
+/* Success State (Clear Cache after click) */
+background: #34a853
 ```
 
-#### Interactive States
-- **Hover**: Lighter background color
-- **Active**: No specific active state
+#### Keyboard Keys (kbd elements) (v1.4.1+)
+```css
+background: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%)
+border: 1px solid #5f6368
+border-radius: 4px
+padding: 4px 10px
+font-family: 'Courier New', monospace
+font-size: 13px
+font-weight: 600
+color: #e8eaed
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3)
+min-width: 40px
+text-align: center
+```
+
+#### Interactive States (v1.4.1+)
+- **Hover**: Lighter background color + transform (primary buttons lift)
+- **Active**: Transform back to original position
 - **Focus**: Browser default (blue outline)
+- **Listening** (Change Key): Blue background with pulse animation
 
 ---
 

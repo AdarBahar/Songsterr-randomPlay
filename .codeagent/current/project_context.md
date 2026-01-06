@@ -91,6 +91,35 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 
 ## Recent Changes (Jan 2026)
 
+### Jan 6, 2026 - Bug Fixes & UI Improvements (v1.4.1)
+**Commits**: 1c99cc4, d859740, 24987cf, 5ade1b3, e5ad509, 906956d
+
+**Bug Fixes**:
+- Fixed duplicate event listener causing ReferenceError in popup
+- Fixed button placement (now appears next to Songsterr logo)
+- Fixed notification stacking (vertical stack with smooth transitions)
+- Fixed notification disappearing too quickly on Shift+click
+
+**UI/UX Improvements**:
+- **Popup Redesign**: Complete modern redesign with gradient background
+  - Card-based layout with better visual hierarchy
+  - Keyboard shortcuts displayed as visual kbd elements
+  - Reorganized layout: Reminder → Shortcuts → Settings → Features → Footer
+  - Positive reminder (blue) instead of warning (red)
+  - Compact footer (minimal height, always visible)
+  - Increased width: 320px → 380px for better readability
+- **Notification Stacking**: Multiple notifications now stack vertically
+  - Each notification visible long enough to read
+  - Smooth slide-up transitions when notifications dismiss
+  - No overlap or visual glitches
+- **Visual Confirmation**: Key change shows green checkmark feedback
+
+**Technical**:
+- Improved notification lifecycle management
+- Better scope handling for timeout IDs
+- Updated popup.js to handle new element IDs
+- Maintained all existing functionality
+
 ### Jan 6, 2026 - Phase 3: Code Quality & Features (v1.4.0)
 **Commit**: 6429d76
 

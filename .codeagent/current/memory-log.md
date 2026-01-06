@@ -144,6 +144,54 @@ try {
 - Consistent UX across all async operations
 - Easy to extend with new notification types
 
+### Notification Stacking Pattern (v1.4.1+)
+**Pattern**: Vertical stack with dynamic positioning
+
+**Implementation**:
+```javascript
+let activeNotifications = [];  // Array of notification objects
+
+const showNotification = (message, type, duration) => {
+  // Calculate top position based on existing notifications
+  let topPosition = NOTIFICATION_TOP_PX;
+  activeNotifications.forEach(notif => {
+    const rect = notif.element.getBoundingClientRect();
+    topPosition = Math.max(topPosition, rect.bottom + NOTIFICATION_GAP_PX);
+  });
+
+  // Create notification at calculated position
+  notification.style.top = `${topPosition}px`;
+  notification.style.transition = 'top 0.3s ease-out';
+
+  // Add to array
+  activeNotifications.push(notificationObj);
+
+  // On dismiss, update positions of remaining notifications
+  const updateNotificationPositions = () => {
+    let currentTop = NOTIFICATION_TOP_PX;
+    activeNotifications.forEach(notif => {
+      notif.element.style.top = `${currentTop}px`;
+      currentTop += notif.element.offsetHeight + NOTIFICATION_GAP_PX;
+    });
+  };
+};
+```
+
+**Benefits**:
+- Multiple notifications visible simultaneously
+- Each notification has full display time (readable)
+- Smooth vertical stacking (top to bottom)
+- Smooth slide-up when notifications dismiss
+- No overlap or visual glitches
+
+**Gotchas**:
+- Must remove from array when dismissed
+- Must update positions of remaining notifications
+- CSS transition needed for smooth repositioning
+- Calculate position based on actual element height (getBoundingClientRect)
+
+**Use Case**: Shift+click shows two notifications (blue + orange), both visible and readable
+
 ### MutationObserver Pattern (v1.4+)
 **Pattern**: Watch for DOM changes to inject UI dynamically
 
