@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Random Favorite Picker",
+    "name": "Random Song - Songsterr Extension",
     "version": "1.4.1",
-    "description": "Play a random song from your favorites list on Songsterr",
+    "description": "Play random songs from your Songsterr favorites. One-click access via toolbar button or keyboard shortcut.",
     "content_security_policy": {
         "extension_pages": "script-src 'self'; object-src 'none'"
     },
