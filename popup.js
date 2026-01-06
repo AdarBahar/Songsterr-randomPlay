@@ -14,13 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize UI
     elements.currentYear.textContent = new Date().getFullYear();
     
-    // Options panel toggle
+    // Options panel toggle with smooth animation
     elements.optionsBtn.addEventListener('click', () => {
-        if (elements.optionsPanel.style.display === 'block') {
-            elements.optionsPanel.style.display = 'none';
+        const isOpen = elements.optionsPanel.classList.contains('open');
+        if (isOpen) {
+            elements.optionsPanel.classList.remove('open');
             elements.optionsBtn.textContent = 'Options';
         } else {
-            elements.optionsPanel.style.display = 'block';
+            elements.optionsPanel.classList.add('open');
             elements.optionsBtn.textContent = 'Close Options';
         }
     });
@@ -35,7 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Validate and sanitize data before storage
+    /**
+     * Validates and saves settings to Chrome storage
+     * Sanitizes input to prevent storage issues
+     * @param {Object} settings - Settings object with optional debug and shortcutKey properties
+     * @param {boolean} [settings.debug] - Debug mode flag
+     * @param {string} [settings.shortcutKey] - Keyboard shortcut key
+     */
     const saveSettings = (settings) => {
         // Get current settings first
         chrome.storage.sync.get(['debug', 'shortcutKey'], (currentSettings) => {

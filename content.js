@@ -1,6 +1,23 @@
+/** @type {boolean} Debug mode flag */
 let isDebugMode = false;
+
+/** @type {string} Current keyboard shortcut key */
 let currentShortcutKey = '=';
 
+/**
+ * Cache for favorites to reduce API calls
+ * @type {{data: Array|null, timestamp: number, ttl: number}}
+ */
+let favoritesCache = {
+    data: null,
+    timestamp: 0,
+    ttl: 60000 // 1 minute cache
+};
+
+/**
+ * Logs debug messages to console when debug mode is enabled
+ * @param {...any} args - Arguments to log
+ */
 const logDebug = (...args) => {
     if (isDebugMode) {
         console.log('[Debug]', ...args);
@@ -10,17 +27,27 @@ const logDebug = (...args) => {
 /**
  * Shows a temporary notification to the user
  * @param {string} message - The message to display
- * @param {string} type - 'success', 'error', or 'info'
+ * @param {string} type - 'success', 'error', 'info', or 'loading'
+ * @param {number} duration - Duration in ms (0 = no auto-dismiss, for loading states)
+ * @returns {Object} Notification element with dismiss() method
  */
-const showNotification = (message, type = 'info') => {
+const showNotification = (message, type = 'info', duration = 3000) => {
     const notification = document.createElement('div');
     notification.textContent = message;
+
+    const colors = {
+        error: '#f44336',
+        success: '#4CAF50',
+        info: '#2196F3',
+        loading: '#FF9800'
+    };
+
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
         padding: 12px 20px;
-        background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#2196F3'};
+        background: ${colors[type] || colors.info};
         color: white;
         border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -30,6 +57,13 @@ const showNotification = (message, type = 'info') => {
         max-width: 300px;
         animation: slideInRight 0.3s ease-out;
     `;
+
+    // Add loading spinner for loading type
+    if (type === 'loading') {
+        const spinner = document.createElement('span');
+        spinner.textContent = ' ⏳';
+        notification.appendChild(spinner);
+    }
 
     // Add animation keyframes
     if (!document.getElementById('notification-styles')) {
@@ -62,13 +96,31 @@ const showNotification = (message, type = 'info') => {
 
     document.body.appendChild(notification);
 
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s ease-out';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    // Auto-remove after duration (if duration > 0)
+    let timeoutId = null;
+    if (duration > 0) {
+        timeoutId = setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }, duration);
+    }
+
+    // Return object with dismiss method
+    return {
+        element: notification,
+        dismiss: () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }
+    };
 };
 
+/**
+ * Creates the random song button for the Songsterr toolbar
+ * Attempts to clone existing toolbar styling for consistency
+ * @returns {HTMLElement|null} The created button element or null if creation fails
+ */
 const createRandomButton = () => {
     // Strategy 1: Try to clone an existing toolbar item (best styling match)
     const existingButtons = document.querySelectorAll('a[class*="Gl5"], nav a, header a');
@@ -155,52 +207,103 @@ const createRandomButton = () => {
     return button;
 };
 
-const playRandomSong = async () => {
-    try {
-        logDebug('Fetching favorites...');
-        const response = await fetch('https://www.songsterr.com/a/wa/favorites', {
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
+/**
+ * Fetches favorites from Songsterr with caching
+ * @returns {Promise<Array>} Array of favorite song elements
+ */
+const fetchFavorites = async () => {
+    const now = Date.now();
 
-        if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
-                showNotification('Please log in to Songsterr to use this feature', 'error');
-            } else {
-                showNotification(`Failed to fetch favorites (Error ${response.status})`, 'error');
-            }
-            logDebug('Network response error:', response.status, response.statusText);
+    // Check if cache is valid
+    if (favoritesCache.data && (now - favoritesCache.timestamp) < favoritesCache.ttl) {
+        logDebug('Using cached favorites, age:', Math.round((now - favoritesCache.timestamp) / 1000), 'seconds');
+        return favoritesCache.data;
+    }
+
+    logDebug('Fetching fresh favorites from API...');
+    const response = await fetch('https://www.songsterr.com/a/wa/favorites', {
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    });
+
+    if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            throw new Error('AUTH_REQUIRED');
+        } else {
+            throw new Error(`HTTP_ERROR_${response.status}`);
+        }
+    }
+
+    const html = await response.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const favoriteSongs = Array.from(doc.querySelectorAll('a[data-song]'));
+
+    // Update cache
+    favoritesCache.data = favoriteSongs;
+    favoritesCache.timestamp = now;
+    logDebug('Cached', favoriteSongs.length, 'favorites');
+
+    return favoriteSongs;
+};
+
+/**
+ * Plays a random song from user's favorites
+ * Shows loading state and handles errors with user notifications
+ * @async
+ * @returns {Promise<void>}
+ */
+const playRandomSong = async () => {
+    // Show loading notification
+    const loadingNotification = showNotification('Loading favorites...', 'loading', 0);
+
+    try {
+        const favoriteSongs = await fetchFavorites();
+        logDebug('Found favorite songs:', favoriteSongs.length);
+
+        if (favoriteSongs.length === 0) {
+            showNotification('No favorites found. Add some songs to your favorites first!', 'error');
+            logDebug('No favorite songs found');
             return;
         }
 
-        const html = await response.text();
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const favoriteSongs = doc.querySelectorAll('a[data-song]');
-        logDebug('Found favorite songs:', favoriteSongs.length);
+        const randomSong = favoriteSongs[Math.floor(Math.random() * favoriteSongs.length)];
+        const url = new URL(randomSong.href);
 
-        if (favoriteSongs.length) {
-            const randomSong = favoriteSongs[Math.floor(Math.random() * favoriteSongs.length)];
-            const url = new URL(randomSong.href);
-            if (url.hostname === 'www.songsterr.com') {
-                logDebug('Navigating to random song:', randomSong.href);
-                window.location.href = randomSong.href;
-            } else {
-                showNotification('Invalid song URL detected', 'error');
-                logDebug('Invalid hostname:', url.hostname);
-            }
-        } else {
-            showNotification('No favorites found. Add some songs to your favorites first!', 'error');
-            logDebug('No favorite songs found');
+        if (url.hostname !== 'www.songsterr.com') {
+            showNotification('Invalid song URL detected', 'error');
+            logDebug('Invalid hostname:', url.hostname);
+            return;
         }
+
+        logDebug('Navigating to random song:', randomSong.href);
+        window.location.href = randomSong.href;
+        // Note: Navigation will dismiss the loading notification automatically
+
     } catch (error) {
-        showNotification('Failed to load favorites. Please try again.', 'error');
+        if (error.message === 'AUTH_REQUIRED') {
+            showNotification('Please log in to Songsterr to use this feature', 'error');
+        } else if (error.message.startsWith('HTTP_ERROR_')) {
+            const status = error.message.replace('HTTP_ERROR_', '');
+            showNotification(`Failed to fetch favorites (Error ${status})`, 'error');
+        } else {
+            showNotification('Failed to load favorites. Please try again.', 'error');
+        }
+
         logDebug('Error fetching favorites:', error);
+    } finally {
+        // Always dismiss loading notification unless we're navigating
+        loadingNotification.dismiss();
     }
 };
 
-// Initialize settings
+/**
+ * Initializes extension settings from Chrome storage
+ * Fetches shortcut key and debug mode settings
+ * @async
+ * @returns {Promise<void>}
+ */
 const initializeSettings = async () => {
     try {
         const [shortcutResponse, debugResponse] = await Promise.all([

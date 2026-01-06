@@ -1,8 +1,16 @@
-// background.js
+/**
+ * Background script for Songsterr Random Favorite Picker
+ * Handles message passing and storage change broadcasting
+ */
+
 console.log('Background script loaded');
 
 chrome.runtime.onInstalled.addListener(() => console.log('Extension installed'));
 
+/**
+ * Message handler for content script requests
+ * Handles getDebugMode and getShortcutKey actions
+ */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'getDebugMode') {
         chrome.storage.sync.get('debug', (data) => {
@@ -21,11 +29,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Don't return true for unhandled messages
 });
 
-// Listen for storage changes
+/**
+ * Storage change listener
+ * Broadcasts settings changes to all tabs for real-time updates
+ */
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'sync') {
         let settingsChanged = {};
-        
+
         if (changes.shortcutKey) {
             settingsChanged.shortcutKey = changes.shortcutKey.newValue;
         }
