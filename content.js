@@ -67,6 +67,12 @@ let favoritesCache = {
 let songHistory = [];
 
 /**
+ * Currently active notification (to prevent stacking)
+ * @type {Object|null}
+ */
+let activeNotification = null;
+
+/**
  * Logs debug messages to console when debug mode is enabled
  * @param {...any} args - Arguments to log
  */
@@ -78,12 +84,19 @@ const logDebug = (...args) => {
 
 /**
  * Shows a temporary notification to the user
+ * Automatically dismisses any existing notification to prevent stacking
  * @param {string} message - The message to display
  * @param {string} type - 'success', 'error', 'info', or 'loading'
  * @param {number} duration - Duration in ms (0 = no auto-dismiss, for loading states)
  * @returns {Object} Notification element with dismiss() method
  */
 const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATION_MS) => {
+    // Dismiss any existing notification first to prevent stacking
+    if (activeNotification) {
+        activeNotification.dismiss();
+        activeNotification = null;
+    }
+
     const notification = document.createElement('div');
     notification.textContent = message;
 
@@ -146,19 +159,36 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
     if (duration > 0) {
         timeoutId = setTimeout(() => {
             notification.style.animation = `slideOutRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out`;
-            setTimeout(() => notification.remove(), NOTIFICATION_ANIMATION_MS);
+            setTimeout(() => {
+                notification.remove();
+                // Clear active notification reference when auto-dismissed
+                if (activeNotification && activeNotification.element === notification) {
+                    activeNotification = null;
+                }
+            }, NOTIFICATION_ANIMATION_MS);
         }, duration);
     }
 
-    // Return object with dismiss method
-    return {
+    // Create notification object with dismiss method
+    const notificationObj = {
         element: notification,
         dismiss: () => {
             if (timeoutId) clearTimeout(timeoutId);
             notification.style.animation = `slideOutRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out`;
-            setTimeout(() => notification.remove(), NOTIFICATION_ANIMATION_MS);
+            setTimeout(() => {
+                notification.remove();
+                // Clear active notification reference when manually dismissed
+                if (activeNotification && activeNotification.element === notification) {
+                    activeNotification = null;
+                }
+            }, NOTIFICATION_ANIMATION_MS);
         }
     };
+
+    // Store as active notification
+    activeNotification = notificationObj;
+
+    return notificationObj;
 };
 
 /**
