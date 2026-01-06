@@ -4,6 +4,59 @@ Entries are added in reverse chronological order.
 
 ---
 
+## 2026-01-06: Phase 1 Critical Bug Fixes (v1.2.1)
+**Branch**: main
+**Commit**: e9d9dc7
+
+### Summary
+Implemented critical bug fixes and UX improvements based on comprehensive code review. Fixed keyboard shortcut conflicts, privacy policy inaccuracies, and added user error notifications.
+
+### Key Changes
+
+**content.js**:
+- Fixed keyboard shortcut triggering in input fields (INPUT, TEXTAREA, contentEditable)
+- Added modifier key checks (Ctrl, Alt, Meta) to prevent conflicts with browser/site shortcuts
+- Added `showNotification()` function with smooth slide-in/out animations
+- Enhanced error handling with user-friendly notifications:
+  - Login required (401/403 errors)
+  - No favorites found
+  - Network errors with status codes
+  - Invalid URLs
+- Fixed hardcoded shortcut in button tooltip - now shows current shortcut dynamically
+- Tooltip updates in real-time when shortcut changes
+
+**background.js**:
+- Removed dead code (unused `playRandom` message handler)
+- Fixed return value for unhandled messages (only return `true` for async handlers)
+
+**privacy-policy.html**:
+- Fixed permissions mismatch - updated to reflect actual permissions
+- Removed incorrect permissions (activeTab, scripting, tabs)
+- Clarified that only `storage` permission is required
+
+**manifest.json & package.json**:
+- Bumped version to 1.2.1
+
+### Impact
+- Better UX with visual error feedback
+- No more accidental shortcut triggers while typing
+- Accurate privacy policy builds user trust
+- Cleaner codebase with dead code removed
+- Dynamic tooltip improves discoverability
+
+### Deployment / Ops Notes
+- Build with `npm run build`
+- Test keyboard shortcut in search fields
+- Test error notifications (logout, no favorites, network errors)
+- Verify tooltip shows correct shortcut after changing it
+
+### Follow-ups
+- Phase 2: Performance improvements (caching, loading states)
+- Phase 3: Code quality refactoring
+- Phase 4: Major features (filters, statistics, TypeScript)
+
+---
+
 ## 2026-01-05: CodeAgent Kit Integration
 **Branch**: main
 **Commits**: 6aec37c, 450de01, 9d67610
