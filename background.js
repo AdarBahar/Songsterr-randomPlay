@@ -4,24 +4,21 @@ console.log('Background script loaded');
 chrome.runtime.onInstalled.addListener(() => console.log('Extension installed'));
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'playRandom') {
-        const items = ['Song 1', 'Song 2', 'Song 3'];
-        sendResponse({ randomItem: items[Math.floor(Math.random() * items.length)] });
-    }
     if (message.action === 'getDebugMode') {
         chrome.storage.sync.get('debug', (data) => {
             sendResponse({ debug: data.debug || false });
         });
         return true; // Required for async response
     }
-    
+
     if (message.action === 'getShortcutKey') {
         chrome.storage.sync.get('shortcutKey', (data) => {
             sendResponse({ shortcutKey: data.shortcutKey || '=' });
         });
         return true; // Required for async response
     }
-    return true;
+
+    // Don't return true for unhandled messages
 });
 
 // Listen for storage changes

@@ -1,6 +1,6 @@
 {
   "name": "random-favorite-picker",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "scripts": {
     "build": "webpack --mode production",
     "minify-css": "cleancss -o dist/styles.min.css src/*.css",

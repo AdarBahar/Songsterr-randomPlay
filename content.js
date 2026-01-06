@@ -7,6 +7,68 @@ const logDebug = (...args) => {
     }
 };
 
+/**
+ * Shows a temporary notification to the user
+ * @param {string} message - The message to display
+ * @param {string} type - 'success', 'error', or 'info'
+ */
+const showNotification = (message, type = 'info') => {
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#2196F3'};
+        color: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        z-index: 10000;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        max-width: 300px;
+        animation: slideInRight 0.3s ease-out;
+    `;
+
+    // Add animation keyframes
+    if (!document.getElementById('notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+};
+
 const createRandomButton = () => {
     // Strategy 1: Try to clone an existing toolbar item (best styling match)
     const existingButtons = document.querySelectorAll('a[class*="Gl5"], nav a, header a');
@@ -20,7 +82,7 @@ const createRandomButton = () => {
                 button.id = 'random-icon';
                 button.href = '#';
                 button.setAttribute('aria-active', 'false');
-                button.title = 'Play Random Song (Shortcut: =)';
+                button.title = `Play Random Song (Shortcut: ${currentShortcutKey})`;
 
                 // Replace SVG content
                 const svg = button.querySelector('svg');
@@ -57,7 +119,7 @@ const createRandomButton = () => {
     const button = document.createElement('a');
     button.id = 'random-icon';
     button.href = '#';
-    button.title = 'Play Random Song (Shortcut: =)';
+    button.title = `Play Random Song (Shortcut: ${currentShortcutKey})`;
 
     // Try to detect and use existing classes
     const existingNavItem = document.querySelector('nav a, header a');
@@ -102,9 +164,15 @@ const playRandomSong = async () => {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
-        
+
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            if (response.status === 401 || response.status === 403) {
+                showNotification('Please log in to Songsterr to use this feature', 'error');
+            } else {
+                showNotification(`Failed to fetch favorites (Error ${response.status})`, 'error');
+            }
+            logDebug('Network response error:', response.status, response.statusText);
+            return;
         }
 
         const html = await response.text();
@@ -118,11 +186,16 @@ const playRandomSong = async () => {
             if (url.hostname === 'www.songsterr.com') {
                 logDebug('Navigating to random song:', randomSong.href);
                 window.location.href = randomSong.href;
+            } else {
+                showNotification('Invalid song URL detected', 'error');
+                logDebug('Invalid hostname:', url.hostname);
             }
         } else {
+            showNotification('No favorites found. Add some songs to your favorites first!', 'error');
             logDebug('No favorite songs found');
         }
     } catch (error) {
+        showNotification('Failed to load favorites. Please try again.', 'error');
         logDebug('Error fetching favorites:', error);
     }
 };
@@ -155,6 +228,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (typeof message.settings.shortcutKey !== 'undefined') {
             currentShortcutKey = message.settings.shortcutKey;
             logDebug('Shortcut key updated to:', currentShortcutKey);
+
+            // Update button tooltip if it exists
+            const button = document.getElementById('random-icon');
+            if (button) {
+                button.title = `Play Random Song (Shortcut: ${currentShortcutKey})`;
+            }
         }
         if (typeof message.settings.debug !== 'undefined') {
             isDebugMode = message.settings.debug;
@@ -202,7 +281,18 @@ if (window.location.hostname.includes("songsterr.com")) {
 
         // Set up keyboard shortcut regardless of whether UI button can be added
         document.addEventListener('keydown', (e) => {
-            if (e.key === currentShortcutKey) {
+            // Don't trigger shortcut when user is typing in input fields
+            const activeElement = document.activeElement;
+            if (activeElement && (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.isContentEditable
+            )) {
+                return;
+            }
+
+            // Only trigger if no modifier keys are pressed (to avoid conflicts)
+            if (e.key === currentShortcutKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 e.preventDefault();
                 logDebug('Shortcut key pressed:', currentShortcutKey);
                 playRandomSong();
