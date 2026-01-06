@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
         changeKeyBtn: document.getElementById('changeKeyBtn'),
         currentKey: document.getElementById('currentKey'),
         shortcutKeyDisplay: document.getElementById('shortcutKeyDisplay'),
+        shortcutKeyDisplay2: document.getElementById('shortcutKeyDisplay2'),
         optionsBtn: document.getElementById('optionsBtn'),
         optionsPanel: document.getElementById('optionsPanel'),
         currentYear: document.getElementById('current-year'),
@@ -14,16 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize UI
     elements.currentYear.textContent = new Date().getFullYear();
-    
+
     // Options panel toggle with smooth animation
     elements.optionsBtn.addEventListener('click', () => {
         const isOpen = elements.optionsPanel.classList.contains('open');
         if (isOpen) {
             elements.optionsPanel.classList.remove('open');
-            elements.optionsBtn.textContent = 'Options';
+            elements.optionsBtn.textContent = '⚙️ Settings';
         } else {
             elements.optionsPanel.classList.add('open');
-            elements.optionsBtn.textContent = 'Close Options';
+            elements.optionsBtn.textContent = '✕ Close Settings';
         }
     });
 
@@ -34,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const key = data.shortcutKey || '=';
             elements.currentKey.textContent = key;
             elements.shortcutKeyDisplay.textContent = key;
+            elements.shortcutKeyDisplay2.textContent = key;
         }
     });
 
@@ -58,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if ('shortcutKey' in settings) {
                     elements.currentKey.textContent = sanitizedSettings.shortcutKey;
                     elements.shortcutKeyDisplay.textContent = sanitizedSettings.shortcutKey;
+                    elements.shortcutKeyDisplay2.textContent = sanitizedSettings.shortcutKey;
                 }
             });
         });
@@ -134,12 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Visual feedback
         const originalText = elements.clearCacheBtn.textContent;
-        elements.clearCacheBtn.textContent = 'Cleared! ✓';
-        elements.clearCacheBtn.style.backgroundColor = '#4CAF50';
+        const originalBg = elements.clearCacheBtn.style.background;
+        elements.clearCacheBtn.textContent = '✓ Cleared!';
+        elements.clearCacheBtn.style.background = '#34a853';
 
         setTimeout(() => {
             elements.clearCacheBtn.textContent = originalText;
-            elements.clearCacheBtn.style.backgroundColor = '';
+            elements.clearCacheBtn.style.background = originalBg;
         }, 2000);
     });
 });

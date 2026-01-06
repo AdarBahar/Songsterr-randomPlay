@@ -3,141 +3,444 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Songsterr - Random Song</title>
+  <title>Random Favorite Picker - Songsterr</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      width: 380px;
       margin: 0;
-      padding: 16px;
-      color: #e0e0e0;
-      background-color: #202124;
-      border: 4px solid #8ab4f8;
+      padding: 0;
+      color: #e8eaed;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      line-height: 1.6;
     }
+
+    .container {
+      padding: 20px;
+    }
+
+    /* Header Section */
     .header {
-      margin-bottom: 12px;
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid rgba(138, 180, 248, 0.2);
     }
+
+    .logo {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
     h1 {
-      font-size: 18px;
-      margin: 0 0 8px 0;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
       color: #8ab4f8;
+      letter-spacing: -0.5px;
     }
-    .content {
-      font-size: 14px;
-      line-height: 1.4;
+
+    .subtitle {
+      font-size: 13px;
+      color: #9aa0a6;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    /* Info Section */
+    .info-section {
+      background: rgba(48, 49, 52, 0.6);
+      border-radius: 8px;
+      padding: 16px;
       margin-bottom: 16px;
+      border: 1px solid rgba(138, 180, 248, 0.15);
     }
-    .options-button {
-      background-color: #8ab4f8;
-      color: #202124;
-      border: none;
-      padding: 8px 12px;
+
+    .info-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #8ab4f8;
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-list {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 13px;
+      color: #bdc1c6;
+    }
+
+    .info-list li {
+      margin-bottom: 6px;
+    }
+
+    .info-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Keyboard Shortcuts */
+    .shortcuts {
+      background: rgba(48, 49, 52, 0.6);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(138, 180, 248, 0.15);
+    }
+
+    .shortcut-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .shortcut-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .shortcut-label {
+      color: #bdc1c6;
+      flex: 1;
+    }
+
+    .kbd {
+      background: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%);
+      border: 1px solid #5f6368;
       border-radius: 4px;
+      padding: 4px 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e8eaed;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      min-width: 40px;
+      text-align: center;
+      display: inline-block;
+    }
+
+    .kbd-combo {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .kbd-plus {
+      color: #9aa0a6;
+      font-size: 11px;
+    }
+
+    /* Options Button */
+    .options-toggle {
+      width: 100%;
+      background: linear-gradient(180deg, #8ab4f8 0%, #7ba3e8 100%);
+      color: #1a1a2e;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 600;
       margin-bottom: 12px;
-      font-weight: 500;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(138, 180, 248, 0.3);
     }
-    .options-button:hover {
-      background-color: #aecbfa;
+
+    .options-toggle:hover {
+      background: linear-gradient(180deg, #aecbfa 0%, #8ab4f8 100%);
+      box-shadow: 0 4px 8px rgba(138, 180, 248, 0.4);
+      transform: translateY(-1px);
     }
+
+    .options-toggle:active {
+      transform: translateY(0);
+    }
+    /* Options Panel */
     .options-panel {
-      background-color: #303134;
-      padding: 0 12px;
-      border-radius: 4px;
+      background: rgba(48, 49, 52, 0.6);
+      border-radius: 8px;
+      border: 1px solid rgba(138, 180, 248, 0.15);
       margin-bottom: 16px;
-      border: 1px solid #5f6368;
       max-height: 0;
       overflow: hidden;
       opacity: 0;
       transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out;
     }
+
     .options-panel.open {
-      max-height: 200px;
+      max-height: 400px;
       opacity: 1;
-      padding: 12px;
+      padding: 16px;
     }
-    .option-row {
-      display: flex;
-      align-items: center;
+
+    .option-group {
+      margin-bottom: 16px;
+    }
+
+    .option-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .option-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #8ab4f8;
       margin-bottom: 8px;
+      display: block;
     }
-    .key-display {
-      background-color: #3c4043;
-      padding: 2px 8px;
-      border-radius: 3px;
-      margin: 0 8px;
-      font-family: monospace;
-      color: #e8eaed;
-    }
-    .change-key-btn, .clear-cache-btn {
-      background-color: #5f6368;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-size: 12px;
-      color: #e8eaed;
-    }
-    .change-key-btn:hover, .clear-cache-btn:hover {
-      background-color: #7e8183;
-    }
-    .clear-cache-btn {
-      width: 100%;
-      margin-top: 8px;
-      padding: 6px 12px;
-    }
-    .footer {
+
+    .option-description {
       font-size: 12px;
       color: #9aa0a6;
-      border-top: 1px solid #3c4043;
-      padding-top: 12px;
-      margin-top: 16px;
+      margin-bottom: 8px;
+      line-height: 1.4;
     }
+
+    .option-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .key-display {
+      background: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%);
+      border: 1px solid #5f6368;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: #e8eaed;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .btn-secondary {
+      background: #5f6368;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      color: #e8eaed;
+      transition: all 0.2s ease;
+      flex: 1;
+    }
+
+    .btn-secondary:hover {
+      background: #7e8183;
+    }
+
+    .btn-danger {
+      background: #d93025;
+      width: 100%;
+      border: none;
+      padding: 10px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: white;
+      transition: all 0.2s ease;
+    }
+
+    .btn-danger:hover {
+      background: #ea4335;
+    }
+
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+
+    .checkbox-wrapper:hover {
+      background: rgba(138, 180, 248, 0.1);
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #8ab4f8;
+    }
+
+    .checkbox-wrapper label {
+      cursor: pointer;
+      font-size: 13px;
+      color: #bdc1c6;
+      flex: 1;
+    }
+
+    /* Footer */
+    .footer {
+      font-size: 11px;
+      color: #9aa0a6;
+      text-align: center;
+      padding-top: 16px;
+      border-top: 1px solid rgba(138, 180, 248, 0.1);
+    }
+
     .footer a {
       color: #8ab4f8;
       text-decoration: none;
+      transition: color 0.2s ease;
     }
+
     .footer a:hover {
+      color: #aecbfa;
       text-decoration: underline;
     }
-    input[type="checkbox"] {
-      accent-color: #8ab4f8;
+
+    /* Requirement Badge */
+    .requirement {
+      background: rgba(234, 67, 53, 0.15);
+      border: 1px solid rgba(234, 67, 53, 0.3);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: #f28b82;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .requirement-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Listening state for change key button */
+    .btn-secondary.listening {
+      background: #8ab4f8;
+      color: #1a1a2e;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: rgba(138, 180, 248, 0.1);
+      margin: 16px 0;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Songsterr - Play Random song</h1>
-  </div>
-  
-  <div class="content">
-    Play a random song out of your favorites list on Songsterr by clicking on the Random icon on Songsterr Toolbar or by using "<span id="shortcutKeyDisplay">=</span>" key on your keyboard.
-    <br><br>
-    <strong>Note:</strong> You need to be logged into your Songsterr account and to have songs in your favorites.
-  </div>
-  
-  <button id="optionsBtn" class="options-button">Options</button>
-  
-  <div id="optionsPanel" class="options-panel">
-    <div class="option-row">
-      <span>Currently assigned key:</span>
-      <span id="currentKey" class="key-display">=</span>
-      <button id="changeKeyBtn" class="change-key-btn">Change key</button>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">🎸</div>
+      <h1>Random Favorite Picker</h1>
+      <p class="subtitle">for Songsterr</p>
     </div>
-    <div class="option-row">
-      <input type="checkbox" id="debugMode">
-      <label for="debugMode">Enable debug mode</label>
+
+    <!-- What it does -->
+    <div class="info-section">
+      <div class="info-title">
+        <span>✨</span>
+        <span>What it does</span>
+      </div>
+      <ul class="info-list">
+        <li>Plays a random song from your Songsterr favorites</li>
+        <li>Avoids repeating the last 10 songs</li>
+        <li>Caches favorites for faster loading (60 seconds)</li>
+        <li>Works via button click or keyboard shortcut</li>
+      </ul>
     </div>
-    <div class="option-row">
-      <button id="clearCacheBtn" class="clear-cache-btn">Clear Cache & History</button>
+
+    <!-- Requirements -->
+    <div class="requirement">
+      <span class="requirement-icon">⚠️</span>
+      <div>
+        <strong>Requirements:</strong> You must be logged into Songsterr and have songs in your favorites list.
+      </div>
     </div>
-  </div>
-  
-  <div class="footer">
-    &copy; Adar Bahar <span id="current-year"></span> | 
-    <a href="https://github.com/adarbahar" target="_blank">Github</a> | 
-    <a href="https://chrome.google.com/webstore/detail/songsterr-random-song/extension-id" target="_blank">Chrome Extension Store</a>
+
+    <!-- Keyboard Shortcuts -->
+    <div class="shortcuts">
+      <div class="info-title">
+        <span>⌨️</span>
+        <span>Keyboard Shortcuts</span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-label">Play random song</span>
+        <span class="kbd" id="shortcutKeyDisplay">=</span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-label">Force refresh (clear cache)</span>
+        <div class="kbd-combo">
+          <span class="kbd">Shift</span>
+          <span class="kbd-plus">+</span>
+          <span class="kbd" id="shortcutKeyDisplay2">=</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Options Toggle Button -->
+    <button id="optionsBtn" class="options-toggle">⚙️ Settings</button>
+
+    <!-- Options Panel -->
+    <div id="optionsPanel" class="options-panel">
+      <!-- Keyboard Shortcut -->
+      <div class="option-group">
+        <label class="option-label">Keyboard Shortcut</label>
+        <p class="option-description">Customize the key to trigger random song playback</p>
+        <div class="option-control">
+          <span class="key-display" id="currentKey">=</span>
+          <button id="changeKeyBtn" class="btn-secondary">Change Key</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Debug Mode -->
+      <div class="option-group">
+        <label class="option-label">Debug Mode</label>
+        <p class="option-description">Show detailed logs in browser console for troubleshooting</p>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="debugMode">
+          <label for="debugMode">Enable debug mode</label>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Clear Cache -->
+      <div class="option-group">
+        <label class="option-label">Cache & History</label>
+        <p class="option-description">Clear cached favorites and song history to force a fresh fetch</p>
+        <button id="clearCacheBtn" class="btn-danger">🗑️ Clear Cache & History</button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div>&copy; <span id="current-year"></span> Adar Bahar</div>
+      <div style="margin-top: 4px;">
+        <a href="https://github.com/AdarBahar/Songsterr-randomPlay" target="_blank">GitHub</a>
+        <span style="margin: 0 6px;">•</span>
+        <a href="https://github.com/AdarBahar/Songsterr-randomPlay/issues" target="_blank">Report Issue</a>
+      </div>
+    </div>
   </div>
 
   <script src="popup.js"></script>
