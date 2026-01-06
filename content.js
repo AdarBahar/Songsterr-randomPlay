@@ -607,12 +607,5 @@ if (window.location.hostname.includes("songsterr.com")) {
 
         // Always log keyboard shortcut availability
         logDebug('Keyboard shortcut available:', currentShortcutKey, '(Shift+key for force refresh)');
-
-        // Event listeners for the UI button
-        randomButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            logDebug('Random button clicked');
-            playRandomSong();
-        });
     });
 }
