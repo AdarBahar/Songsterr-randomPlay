@@ -4,6 +4,85 @@ Entries are added in reverse chronological order.
 
 ---
 
+## 2026-01-06: Phase 2 Performance & UX Improvements (v1.3.0)
+**Branch**: main
+**Commit**: 8aa287e
+
+### Summary
+Implemented performance optimizations and UX enhancements. Added loading states, favorites caching, smooth animations, comprehensive documentation, and code cleanup.
+
+### Key Changes
+
+**content.js**:
+- **Loading State**: Added loading notification with hourglass icon while fetching favorites
+  - Dismissible notification system with `dismiss()` method
+  - Better perceived performance for users
+- **Favorites Caching**: Implemented 1-minute cache for favorites
+  - Reduces API calls significantly
+  - Cache includes timestamp and TTL (60 seconds)
+  - Debug logging shows cache age
+  - Automatic cache invalidation
+- **Code Consolidation**: Refactored `playRandomSong()` with early returns
+  - Single dismiss point using `finally` block
+  - Cleaner error handling flow
+  - Removed duplicate `loadingNotification.dismiss()` calls
+- **JSDoc Comments**: Added comprehensive documentation
+  - All functions documented with `@param`, `@returns`, `@async`
+  - Type annotations for variables
+  - Improved maintainability
+
+**popup.html**:
+- **Smooth Animations**: Added CSS transitions for options panel
+  - Slide-down/up animation (max-height, opacity, padding)
+  - 0.3s ease-out transitions
+  - `.open` class for state management
+
+**popup.js**:
+- Updated toggle logic to use CSS classes instead of inline styles
+- Added JSDoc for `saveSettings()` function
+- Better animation support
+
+**background.js**:
+- Added comprehensive JSDoc comments
+- Documented message handlers and storage listeners
+
+**New Files**:
+- **TESTING_GUIDE.md**: Comprehensive testing guide with 7 test scenarios
+  - Step-by-step instructions for loading extension
+  - Test cases for all Phase 1 fixes
+  - Happy path testing
+
+### Performance Impact
+- **First click**: ~same (fetches from API)
+- **Subsequent clicks within 1 minute**: Instant (uses cache)
+- **API calls reduced**: Up to 60x fewer calls for active users
+- **Loading feedback**: Users see progress instead of wondering if it's working
+
+### UX Improvements
+- Loading notification provides immediate feedback
+- Smooth animations feel more polished
+- Better error messages with context
+- Cache improves responsiveness
+
+### Code Quality
+- +150 lines of JSDoc comments
+- Better code organization with early returns
+- Reduced duplication
+- More maintainable codebase
+
+### Deployment / Ops Notes
+- Build with `npm run build`
+- Test caching behavior (click twice within 1 minute)
+- Test loading notification appears and dismisses
+- Test options panel animation is smooth
+- Check debug logs show cache age
+
+### Follow-ups
+- Phase 3: Code quality refactoring (constants, history tracking, MutationObserver)
+- Phase 4: Major features (TypeScript, filters, statistics, playlist mode)
+
+---
+
 ## 2026-01-06: Phase 1 Critical Bug Fixes (v1.2.1)
 **Branch**: main
 **Commit**: e9d9dc7
