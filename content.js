@@ -519,14 +519,56 @@ const injectRandomButton = (toolbar) => {
         return false;
     }
 
-    randomButton.addEventListener('click', () => {
-        logDebug('Random button clicked');
-        playRandomSong();
+    randomButton.addEventListener('click', (e) => {
+        // Check for Shift modifier on click too
+        if (e.shiftKey) {
+            logDebug('Shift + Random button clicked: force refresh');
+            showNotification('Refreshing favorites and clearing history...', 'info', 1500);
+            playRandomSong(true); // Force refresh
+        } else {
+            logDebug('Random button clicked');
+            playRandomSong();
+        }
     });
 
-    toolbar.appendChild(randomButton);
-    logDebug('Random button injected successfully');
-    return true;
+    // Try multiple positioning strategies for best placement
+    let inserted = false;
+
+    // Strategy 1: Insert into empty div next to logo (preferred position)
+    const emptyDivs = toolbar.querySelectorAll('div.Gl5687');
+    if (emptyDivs.length > 0) {
+        emptyDivs[0].appendChild(randomButton);
+        logDebug('Random button inserted into empty div.Gl5687');
+        inserted = true;
+    }
+    // Strategy 2: Insert right after the logo
+    else {
+        const logo = toolbar.querySelector('#logo, a[aria-label="Songsterr"]');
+        if (logo && logo.nextSibling) {
+            toolbar.insertBefore(randomButton, logo.nextSibling);
+            logDebug('Random button inserted after logo');
+            inserted = true;
+        }
+        // Strategy 3: Insert at the beginning of toolbar
+        else if (toolbar.firstChild) {
+            toolbar.insertBefore(randomButton, toolbar.firstChild);
+            logDebug('Random button inserted at beginning of toolbar');
+            inserted = true;
+        }
+        // Strategy 4: Append to end (last resort)
+        else {
+            toolbar.appendChild(randomButton);
+            logDebug('Random button appended to toolbar (last resort)');
+            inserted = true;
+        }
+    }
+
+    if (inserted) {
+        logDebug('Random button injected successfully');
+        return true;
+    }
+
+    return false;
 };
 
 /**

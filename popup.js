@@ -90,17 +90,28 @@ document.addEventListener('DOMContentLoaded', () => {
             // Limit key length for storage
             if (pressedKey.length > 20) {
                 elements.changeKeyBtn.textContent = 'Invalid key';
+                elements.changeKeyBtn.classList.remove('listening');
                 setTimeout(() => {
                     elements.changeKeyBtn.textContent = 'Change Key';
+                    isListening = false;
                 }, 2000);
+                document.removeEventListener('keydown', handleKeyPress);
                 return;
             }
 
             saveSettings({ shortcutKey: pressedKey });
-            elements.changeKeyBtn.textContent = 'Change Key';
+
+            // Visual confirmation
+            elements.changeKeyBtn.textContent = 'Key Changed! ✓';
+            elements.changeKeyBtn.style.backgroundColor = '#4CAF50';
             elements.changeKeyBtn.classList.remove('listening');
-            isListening = false;
-            
+
+            setTimeout(() => {
+                elements.changeKeyBtn.textContent = 'Change Key';
+                elements.changeKeyBtn.style.backgroundColor = '';
+                isListening = false;
+            }, 2000);
+
             document.removeEventListener('keydown', handleKeyPress);
         };
 
