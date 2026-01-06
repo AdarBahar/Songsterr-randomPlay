@@ -67,10 +67,10 @@ let favoritesCache = {
 let songHistory = [];
 
 /**
- * Currently active notification (to prevent stacking)
- * @type {Object|null}
+ * Array of currently active notifications (for vertical stacking)
+ * @type {Array<Object>}
  */
-let activeNotification = null;
+let activeNotifications = [];
 
 /**
  * Logs debug messages to console when debug mode is enabled
@@ -83,26 +83,41 @@ const logDebug = (...args) => {
 };
 
 /**
+ * Updates positions of all active notifications to stack vertically
+ */
+const updateNotificationPositions = () => {
+    let offset = NOTIFICATION_TOP_PX;
+    activeNotifications.forEach(notif => {
+        if (notif.element && notif.element.parentNode) {
+            notif.element.style.top = `${offset}px`;
+            offset += notif.element.offsetHeight + 10; // 10px gap between notifications
+        }
+    });
+};
+
+/**
  * Shows a temporary notification to the user
- * Automatically dismisses any existing notification to prevent stacking
+ * Notifications stack vertically if multiple are shown
  * @param {string} message - The message to display
  * @param {string} type - 'success', 'error', 'info', or 'loading'
  * @param {number} duration - Duration in ms (0 = no auto-dismiss, for loading states)
  * @returns {Object} Notification element with dismiss() method
  */
 const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATION_MS) => {
-    // Dismiss any existing notification first to prevent stacking
-    if (activeNotification) {
-        activeNotification.dismiss();
-        activeNotification = null;
-    }
-
     const notification = document.createElement('div');
     notification.textContent = message;
 
+    // Calculate initial top position based on existing notifications
+    let topPosition = NOTIFICATION_TOP_PX;
+    activeNotifications.forEach(notif => {
+        if (notif.element && notif.element.parentNode) {
+            topPosition += notif.element.offsetHeight + 10; // 10px gap
+        }
+    });
+
     notification.style.cssText = `
         position: fixed;
-        top: ${NOTIFICATION_TOP_PX}px;
+        top: ${topPosition}px;
         right: ${NOTIFICATION_RIGHT_PX}px;
         padding: 12px 20px;
         background: ${NOTIFICATION_COLORS[type] || NOTIFICATION_COLORS.info};
@@ -114,6 +129,7 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
         font-size: 14px;
         max-width: ${NOTIFICATION_MAX_WIDTH_PX}px;
         animation: slideInRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out;
+        transition: top ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out;
     `;
 
     // Add loading spinner for loading type
@@ -154,20 +170,8 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
 
     document.body.appendChild(notification);
 
-    // Auto-remove after duration (if duration > 0)
+    // Auto-remove timeout reference
     let timeoutId = null;
-    if (duration > 0) {
-        timeoutId = setTimeout(() => {
-            notification.style.animation = `slideOutRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out`;
-            setTimeout(() => {
-                notification.remove();
-                // Clear active notification reference when auto-dismissed
-                if (activeNotification && activeNotification.element === notification) {
-                    activeNotification = null;
-                }
-            }, NOTIFICATION_ANIMATION_MS);
-        }, duration);
-    }
 
     // Create notification object with dismiss method
     const notificationObj = {
@@ -177,16 +181,26 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
             notification.style.animation = `slideOutRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out`;
             setTimeout(() => {
                 notification.remove();
-                // Clear active notification reference when manually dismissed
-                if (activeNotification && activeNotification.element === notification) {
-                    activeNotification = null;
+                // Remove from active notifications array
+                const index = activeNotifications.indexOf(notificationObj);
+                if (index > -1) {
+                    activeNotifications.splice(index, 1);
+                    // Update positions of remaining notifications
+                    updateNotificationPositions();
                 }
             }, NOTIFICATION_ANIMATION_MS);
         }
     };
 
-    // Store as active notification
-    activeNotification = notificationObj;
+    // Add to active notifications array
+    activeNotifications.push(notificationObj);
+
+    // Auto-remove after duration (if duration > 0)
+    if (duration > 0) {
+        timeoutId = setTimeout(() => {
+            notificationObj.dismiss();
+        }, duration);
+    }
 
     return notificationObj;
 };
