@@ -75,9 +75,9 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 - **Terser**: Minifies JS while preserving console.logs for debug mode
 - **Output**: `dist/` directory with production-ready files
 
-## Current State (as of v1.4.0)
+## Current State (as of v1.4.1)
 
-- ✅ Published on Chrome Web Store
+- ✅ **Submitted to Chrome Web Store** (Jan 6, 2026) - Pending review
 - ✅ Fully functional with current Songsterr layout
 - ✅ Adaptive UI with MutationObserver + fallback selectors
 - ✅ Settings persistence via Chrome sync storage
@@ -88,10 +88,35 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 - ✅ Power user features (Shift+key, manual cache clear)
 - ✅ Constants-based configuration for maintainability
 - ✅ Comprehensive code documentation with JSDoc
+- ✅ Professional popup UI (no scrollbar, clean design)
+- ✅ Chrome Web Store assets ready (screenshots, privacy policy)
 
 ## Recent Changes (Jan 2026)
 
-### Jan 6, 2026 - Bug Fixes & UI Improvements (v1.4.1)
+### Jan 6, 2026 - Chrome Web Store Submission (v1.4.1)
+**Commits**: 29e03c2, 1b7a17b, cb8191a, 46db36c, 7a2cc6b, 6b8718e, ac5d6c2
+**Status**: ✅ Submitted to Chrome Web Store
+
+**Popup UI Refinements**:
+- Removed guitar icon from header for cleaner, professional look
+- Fixed scrollbar issues (Chrome's ~600px max popup height)
+- Restored original font sizes for better readability
+- Optimized spacing to fit within Chrome's height limit
+- Enabled scrollable container for settings panel
+
+**Store Listing**:
+- Updated extension name: "Random Song - Songsterr Extension"
+- Updated description for Chrome Web Store
+- Screenshots prepared (3 images in screenshots/chrome-web-store/)
+- Privacy policy finalized
+- Extension successfully submitted on Jan 6, 2026
+
+**Technical**:
+- Set `max-height: 600px` on container with `overflow-y: auto`
+- No scrollbar when settings closed, smooth scrolling when open
+- All content properly sized and readable
+
+### Jan 6, 2026 - Bug Fixes & UI Improvements (v1.4.1 - Pre-Submission)
 **Commits**: 1c99cc4, d859740, 24987cf, 5ade1b3, e5ad509, 906956d
 
 **Bug Fixes**:
@@ -196,5 +221,5 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 ## Links
 
 - **Repository**: https://github.com/AdarBahar/Songsterr-randomPlay
-- **Chrome Web Store**: (Extension ID to be added)
+- **Chrome Web Store**: Pending review (submitted Jan 6, 2026)
 - **Songsterr**: https://www.songsterr.com

@@ -31,7 +31,9 @@ A Chrome extension that adds a random song picker functionality to Songsterr.com
 ## Installation
 
 ### From Chrome Web Store (Recommended)
-*Coming soon - Extension pending review*
+**Status**: ✅ Submitted on January 6, 2026 - Pending Chrome Web Store review
+
+The extension will be available for one-click installation once approved.
 
 ### Manual Installation (Development)
 1. Download or clone this repository
@@ -155,6 +157,14 @@ npm run compile
 See [deployment.md](.codeagent/current/deployment.md) for detailed deployment instructions.
 
 ## Version History
+
+### v1.4.1 (2026-01-06) - Chrome Web Store Submission ✅
+- 🎨 **Popup UI refinements** - Removed guitar icon, cleaner header
+- 🐛 **Fixed scrollbar issues** - Proper height constraints for Chrome's limits
+- 📏 **Restored font sizes** - Better readability after over-compression
+- 📜 **Scrollable settings** - Settings panel scrolls smoothly when expanded
+- 🏪 **Chrome Web Store ready** - Screenshots, privacy policy, metadata finalized
+- ✅ **Submitted** - Extension submitted to Chrome Web Store on Jan 6, 2026
 
 ### v1.4.0 (2026-01-06) - Code Quality & Features
 - 🎯 **Constants extraction** - All magic numbers moved to named constants

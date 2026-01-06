@@ -4,7 +4,89 @@ Entries are added in reverse chronological order.
 
 ---
 
-## 2026-01-06: Bug Fixes & UI Improvements (v1.4.1)
+## 2026-01-06: Chrome Web Store Submission (v1.4.1)
+**Branch**: main
+**Commits**: 29e03c2, 1b7a17b, cb8191a, 46db36c, 7a2cc6b, 6b8718e, ac5d6c2
+**Status**: ✅ Submitted to Chrome Web Store
+
+### Summary
+Finalized v1.4.1 for Chrome Web Store submission with popup UI refinements, scrollbar fixes, and updated store listing metadata. Extension submitted successfully on 2026-01-06.
+
+### Key Changes
+
+**popup.html** (UI Refinements):
+- **Removed guitar icon** from header (display: none)
+  - Cleaner, more professional appearance
+  - Reduced header height accordingly
+- **Fixed scrollbar issues**:
+  - Removed forced height (650px) that exceeded Chrome's ~600px max popup height
+  - Set `max-height: 600px` on html, body, and container
+  - Enabled `overflow-y: auto` on container for scrollable settings panel
+  - No scrollbar when settings closed, smooth scrolling when settings open
+- **Restored original font sizes** after over-compression:
+  - Title: 20px, Subtitle: 13px
+  - Info sections: 14px titles, 13px text
+  - Keyboard shortcuts: 13px
+  - Buttons: 14px, Reminder: 12px, Footer: 10px
+- **Optimized spacing**:
+  - Container padding: 12px → 10px
+  - Header margins reduced for compact layout
+  - Options panel padding: 16px → 10px
+  - All content fits within Chrome's height limit
+
+**manifest.json & package.json**:
+- Updated extension name: "Random Song - Songsterr Extension"
+- Updated description for Chrome Web Store listing
+- Version confirmed at 1.4.1
+
+**Chrome Web Store Assets**:
+- Screenshots prepared in `screenshots/chrome-web-store/`
+  - screenshot1.png (222KB)
+  - screenshot2.png (274KB)
+  - screenshot3.png (68KB)
+- Privacy policy ready at privacy-policy.html
+- Store listing metadata finalized
+
+### Reasoning
+- **Scrollbar Fix**: Chrome extensions have ~600px max popup height; forcing 650px caused scrollbar
+- **Guitar Icon Removal**: Cleaner, more professional look for store listing
+- **Font Size Restoration**: Previous compression made text too small and hard to read
+- **Scrollable Container**: Settings panel needs scrolling when expanded beyond 600px
+
+### Impact
+- **User Experience**: Clean, professional popup with no unwanted scrollbars
+- **Chrome Web Store**: Ready for public distribution
+- **Readability**: All text properly sized and readable
+- **Functionality**: Settings panel fully accessible with smooth scrolling
+
+### Testing
+- [x] Popup displays without scrollbar when settings closed
+- [x] Settings panel scrollable when opened
+- [x] No guitar icon in header
+- [x] All font sizes readable
+- [x] Extension reloads correctly
+- [x] Build successful: `npm run build && npm run zip`
+- [x] Screenshots captured and ready
+- [x] Privacy policy accurate
+
+### Deployment Notes
+- **Status**: ✅ Submitted to Chrome Web Store on 2026-01-06
+- **Version**: 1.4.1
+- **Build**: `extension.zip` created from `dist/` folder
+- **Store Listing**: Name, description, screenshots, privacy policy all submitted
+- **Review Status**: Pending Chrome Web Store review
+- **No breaking changes**: Safe update for existing users
+
+### Next Steps
+- Monitor Chrome Web Store review status
+- Respond to any review feedback if needed
+- Announce release when approved
+- Update README with Chrome Web Store link once live
+- Plan Phase 4 features (TypeScript, filters, statistics)
+
+---
+
+## 2026-01-06: Bug Fixes & UI Improvements (v1.4.1 - Pre-Submission)
 **Branch**: main
 **Commits**: 1c99cc4, d859740, 24987cf, 5ade1b3, e5ad509, 906956d
 

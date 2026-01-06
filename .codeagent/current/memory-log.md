@@ -402,6 +402,24 @@ Before releasing:
 6. **Tag**: Create git tag for version (e.g., `v1.2.0`)
 7. **Push**: Push commits and tags to GitHub
 
+### Chrome Web Store Submission Checklist (v1.4.1)
+- [x] Extension name updated in manifest
+- [x] Description optimized for store listing
+- [x] Screenshots prepared (3 images in screenshots/chrome-web-store/)
+- [x] Privacy policy finalized and accessible
+- [x] Popup UI polished (no scrollbar, clean design)
+- [x] All features tested and working
+- [x] Build successful: `npm run build && npm run zip`
+- [x] Submitted on Jan 6, 2026
+
+### Chrome Popup Height Constraint (Learned in v1.4.1)
+**Issue**: Chrome extensions have a **maximum popup height of ~600px**
+- Forcing height > 600px causes unwanted scrollbar
+- Solution: Set `max-height: 600px` on container with `overflow-y: auto`
+- Let Chrome size popup naturally, don't force fixed height
+- Reduce spacing/padding to fit content within limit
+- Enable scrolling only when content exceeds limit (e.g., settings panel open)
+
 ---
 
 ## Dependencies
