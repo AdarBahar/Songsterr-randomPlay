@@ -11,24 +11,24 @@
 showNotification(message, type, timeout)
 ```
 
-**Types**:
+**Types** (defined in `NOTIFICATION_COLORS` constant, v1.4+):
 - `"loading"` - Orange (#FF9800) with hourglass icon ⏳
 - `"error"` - Red (#f44336)
 - `"success"` - Green (#4CAF50)
 - `"info"` - Blue (#2196F3)
 
-#### Styling
+#### Styling (constants-based, v1.4+)
 ```css
 position: fixed
-top: 20px
-right: 20px
+top: NOTIFICATION_TOP_PX (20px)
+right: NOTIFICATION_RIGHT_PX (20px)
 padding: 12px 20px
 border-radius: 4px
 box-shadow: 0 2px 8px rgba(0,0,0,0.3)
-z-index: 10000
+z-index: NOTIFICATION_Z_INDEX (10000)
 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
 font-size: 14px
-max-width: 300px
+max-width: NOTIFICATION_MAX_WIDTH_PX (300px)
 ```
 
 #### Behavior
@@ -91,12 +91,18 @@ padding: 8px 12px
 border-radius: 4px
 font-weight: 500
 
-/* Secondary Button (Change Key) */
+/* Secondary Button (Change Key, Clear Cache) */
 background: #5f6368
 color: #e8eaed
 padding: 4px 8px
 border-radius: 3px
 font-size: 12px
+
+/* Clear Cache Button (v1.4+) */
+width: 100%
+margin-top: 8px
+padding: 6px 12px
+/* Success state: background: #4CAF50 */
 ```
 
 #### Interactive States

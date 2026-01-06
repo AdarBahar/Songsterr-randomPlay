@@ -16,15 +16,78 @@ Durable knowledge, decisions, patterns, "how we do things here", and gotchas.
 - Must match Songsterr's styling for seamless integration
 - Content scripts run in page context with access to DOM
 
-### Why Multiple Fallback Selectors?
+### Why Multiple Fallback Selectors + MutationObserver? (v1.4+)
 - Songsterr uses dynamically generated CSS class names (e.g., `Gl54yj`, `Fbh5d4`)
 - Class names may change with Songsterr updates or A/B tests
-- 20+ fallback selectors ensure extension remains functional
+- Songsterr is a SPA - toolbar may load after initial page load
+- **Static approach**: 20+ fallback selectors tried on page load
+- **Dynamic approach**: MutationObserver watches for toolbar appearance
+- Observer auto-disconnects after successful injection (performance)
 - Keyboard shortcut always works as ultimate fallback
 
 ---
 
 ## Development Patterns
+
+### Constants-Based Configuration (v1.4+)
+**Pattern**: Extract all magic numbers to named constants
+
+**Implementation**:
+```javascript
+// At top of file
+const CACHE_TTL_MS = 60000;
+const NOTIFICATION_DURATION_MS = 3000;
+const MAX_SONG_HISTORY = 10;
+// ... etc
+```
+
+**Benefits**:
+- Single source of truth for configuration
+- Easy to adjust values without hunting through code
+- Self-documenting (constant names explain purpose)
+- Easier to test different values
+- Better code readability
+
+**Convention**:
+- Use SCREAMING_SNAKE_CASE for constants
+- Group related constants together
+- Add units to names (MS for milliseconds, PX for pixels)
+- Document purpose with inline comments
+
+### Song History Tracking (v1.4+)
+**Pattern**: Circular buffer with max size limit
+
+**Implementation**:
+```javascript
+let songHistory = [];  // Stores last N song URLs
+
+const addToSongHistory = (url) => {
+  songHistory.push(url);
+  if (songHistory.length > MAX_SONG_HISTORY) {
+    songHistory.shift();  // Remove oldest
+  }
+};
+
+const selectRandomSong = (favorites) => {
+  // Filter out songs in history
+  const available = favorites.filter(s => !songHistory.includes(s.href));
+  // Use filtered list, or all if history is full
+  const pool = available.length > 0 ? available : favorites;
+  return pool[Math.floor(Math.random() * pool.length)];
+};
+```
+
+**Benefits**:
+- No immediate repeats (better variety)
+- Automatic size management (no memory leaks)
+- Graceful fallback when all songs are in history
+- Simple O(n) filtering
+
+**Gotchas**:
+- History is per-tab (not shared across tabs)
+- History clears on page reload
+- If favorites < MAX_SONG_HISTORY, some repeats are inevitable
+- Debug logs show filtering statistics
 
 ### Caching Strategy (v1.3+)
 **Pattern**: In-memory cache with TTL (Time To Live)
@@ -81,6 +144,39 @@ try {
 - Consistent UX across all async operations
 - Easy to extend with new notification types
 
+### MutationObserver Pattern (v1.4+)
+**Pattern**: Watch for DOM changes to inject UI dynamically
+
+**Implementation**:
+```javascript
+const setupToolbarObserver = () => {
+  let hasInjected = false;
+  const observer = new MutationObserver((mutations) => {
+    if (hasInjected) return;
+    const toolbar = findToolbar();
+    if (toolbar) {
+      injectRandomButton(toolbar);
+      hasInjected = true;
+      observer.disconnect();  // IMPORTANT: Stop observing
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  return observer;
+};
+```
+
+**Benefits**:
+- Handles SPAs where content loads dynamically
+- More robust than static selectors alone
+- Automatically stops when done (performance)
+- Works with Songsterr's client-side routing
+
+**Gotchas**:
+- MUST disconnect observer after injection (avoid memory leaks)
+- Use flag to prevent duplicate injections
+- Observe entire body with subtree:true for deep changes
+- Combine with static detection (try immediate, then observe)
+
 ### Button Creation Strategy
 1. **First try**: Clone existing toolbar button (best styling match)
    - Preserves Songsterr's exact styling and structure
@@ -91,6 +187,12 @@ try {
    - Detect and copy classes from existing nav items
    - Use flexible CSS that adapts to different layouts
    - Add hover effects for better UX
+
+3. **Injection** (v1.4+): Modular approach
+   - `findToolbar()` - Try all selectors, return first match
+   - `injectRandomButton(toolbar)` - Inject button, check duplicates
+   - `setupToolbarObserver()` - Watch for toolbar if not found
+   - Separation of concerns for easier testing
 
 ### Settings Management
 - Use Chrome sync storage for cross-device settings sync
@@ -177,7 +279,8 @@ try {
 - Use descriptive function names: `createRandomButton`, `playRandomSong`
 - Prefix debug logs with `[Debug]`
 - Use camelCase for variables and functions
-- Use UPPER_CASE for constants (if any)
+- Use SCREAMING_SNAKE_CASE for constants (v1.4+)
+- Add units to constant names: `_MS`, `_PX`, `_MAX`, etc.
 
 ### Error Handling
 - Always wrap async operations in try-catch
@@ -234,6 +337,10 @@ Before releasing:
 - [ ] **Test loading notification** (v1.3+): Verify appears and dismisses
 - [ ] **Test animations** (v1.3+): Options panel slides smoothly
 - [ ] **Test cache expiration** (v1.3+): Wait 61 seconds, verify cache refreshes
+- [ ] **Test song history** (v1.4+): Play 5 songs, verify no immediate repeats
+- [ ] **Test Shift+key** (v1.4+): Verify force refresh notification and cache clear
+- [ ] **Test clear cache button** (v1.4+): Click button, verify visual feedback
+- [ ] **Test MutationObserver** (v1.4+): Navigate within Songsterr (SPA), verify button appears
 
 ---
 
@@ -306,7 +413,9 @@ Before releasing:
 - Set up CI/CD pipeline
 
 ### Features
-- MutationObserver for more robust UI injection
+- ✅ MutationObserver for more robust UI injection (implemented in v1.4)
+- ✅ Song history to avoid repeats (implemented in v1.4)
+- ✅ Modifier keys for power users (implemented in v1.4)
 - Filters for random selection (artist, difficulty, instrument)
 - Play queue of random songs
 - Statistics and analytics
@@ -314,6 +423,7 @@ Before releasing:
 
 ### Performance
 - ✅ Cache favorites list temporarily (implemented in v1.3)
+- ✅ Constants-based configuration (implemented in v1.4)
 - Optimize selector matching algorithm
 - Reduce bundle size further
 - Consider IndexedDB for longer-term caching

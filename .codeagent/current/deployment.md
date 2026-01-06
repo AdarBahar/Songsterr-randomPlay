@@ -93,6 +93,10 @@ npm run compile
 - [ ] **Test loading notification** (v1.3+): Verify appears and dismisses properly
 - [ ] **Test animations** (v1.3+): Options panel slides smoothly
 - [ ] **Test cache expiration** (v1.3+): Wait 61 seconds, verify fresh fetch
+- [ ] **Test song history** (v1.4+): Play 5+ songs, verify no immediate repeats
+- [ ] **Test Shift+key** (v1.4+): Verify force refresh clears cache & history
+- [ ] **Test clear cache button** (v1.4+): Click in popup, verify visual feedback
+- [ ] **Test MutationObserver** (v1.4+): Navigate within Songsterr, verify button appears
 - [ ] Run comprehensive test suite (see TESTING_GUIDE.md)
 
 ### Build for Production
@@ -153,9 +157,9 @@ Follow semantic versioning: `MAJOR.MINOR.PATCH`
 - **MINOR**: New features, backward compatible
 - **PATCH**: Bug fixes, minor improvements
 
-### Current Version: 1.3.0
+### Current Version: 1.4.0
 - Major: 1 (initial release)
-- Minor: 3 (performance & UX improvements)
+- Minor: 4 (code quality & features)
 - Patch: 0
 
 ### Updating Version

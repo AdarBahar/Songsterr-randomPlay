@@ -25,10 +25,14 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 4. **Settings Panel**:
    - Change keyboard shortcut
    - Toggle debug mode for troubleshooting
+   - Clear cache & history button (v1.4+)
 5. **Adaptive UI**: Multiple fallback strategies to handle Songsterr's dynamic CSS classes
 6. **Loading States** (v1.3+): Visual feedback with loading notification while fetching favorites
 7. **Performance Caching** (v1.3+): 1-minute cache for favorites to reduce API calls and improve responsiveness
 8. **Smooth Animations** (v1.3+): Polished UI with slide-down/up animations for options panel
+9. **Song History Tracking** (v1.4+): Avoids repeating last 10 songs for better variety
+10. **Modifier Key Support** (v1.4+): Shift+key for force refresh (clears cache & history)
+11. **Dynamic Toolbar Detection** (v1.4+): MutationObserver for robust UI injection in SPAs
 
 ## Architecture
 
@@ -36,11 +40,15 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 
 - **content.js**: Main content script injected into Songsterr pages
   - Creates and injects the Random button into Songsterr's toolbar
-  - Handles keyboard shortcuts
+  - Handles keyboard shortcuts (normal + Shift modifier)
   - Fetches favorites and navigates to random song
   - Manages debug logging
   - Implements favorites caching (60-second TTL)
   - Shows loading notifications with dismissible UI
+  - Tracks song history to avoid repeats (last 10 songs)
+  - Smart song selection filtering
+  - MutationObserver for dynamic toolbar detection
+  - Constants-based configuration
   - Comprehensive JSDoc documentation
 
 - **background.js**: Service worker for extension lifecycle
@@ -51,6 +59,7 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 - **popup.js/popup.html**: Extension popup UI
   - Settings interface for keyboard shortcut customization
   - Debug mode toggle
+  - Clear cache & history button
   - User instructions and links
   - Smooth CSS animations for options panel (slide-down/up)
 
@@ -66,18 +75,44 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 - **Terser**: Minifies JS while preserving console.logs for debug mode
 - **Output**: `dist/` directory with production-ready files
 
-## Current State (as of v1.3.0)
+## Current State (as of v1.4.0)
 
 - ✅ Published on Chrome Web Store
 - ✅ Fully functional with current Songsterr layout
-- ✅ Adaptive UI with multiple fallback selectors
+- ✅ Adaptive UI with MutationObserver + fallback selectors
 - ✅ Settings persistence via Chrome sync storage
 - ✅ Real-time settings updates across tabs
 - ✅ Performance optimized with favorites caching (60s TTL)
 - ✅ Enhanced UX with loading states and smooth animations
+- ✅ Song history tracking for variety (no repeats in last 10)
+- ✅ Power user features (Shift+key, manual cache clear)
+- ✅ Constants-based configuration for maintainability
 - ✅ Comprehensive code documentation with JSDoc
 
 ## Recent Changes (Jan 2026)
+
+### Jan 6, 2026 - Phase 3: Code Quality & Features (v1.4.0)
+**Commit**: 6429d76
+
+**Code Quality**:
+- Extracted all magic numbers to named constants (CACHE_TTL_MS, NOTIFICATION_*, etc.)
+- Better code organization with constants section
+- Improved maintainability and readability
+
+**New Features**:
+- **Song History Tracking**: Tracks last 10 played songs to avoid immediate repeats
+  - Smart selection filters out recent history
+  - Falls back to all songs if history is full
+- **Modifier Key Support**: Shift+key for force refresh (clears cache & history)
+- **Cache Clear Button**: Manual control in options panel
+- **MutationObserver**: Dynamic toolbar detection for SPAs
+  - More robust than static selectors
+  - Handles delayed content loading
+  - Auto-disconnects after injection
+
+**Functions Added**:
+- `addToSongHistory()`, `isInRecentHistory()`, `selectRandomSong()`
+- `findToolbar()`, `injectRandomButton()`, `setupToolbarObserver()`
 
 ### Jan 6, 2026 - Phase 2: Performance & UX Improvements (v1.3.0)
 **Commits**: 8aa287e, 05ae0dc, 6c45338

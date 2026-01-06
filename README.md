@@ -16,6 +16,12 @@ A Chrome extension that adds a random song picker functionality to Songsterr.com
 - **✨ Smooth animations** - Polished UI with slide-down/up transitions
 - **📊 Performance boost** - Up to 60x fewer API calls for active users
 
+### Smart Features (v1.4+)
+- **🎲 No repeats** - Tracks last 10 songs to avoid playing the same song twice in a row
+- **⚡ Force refresh** - Press Shift+key to clear cache and history instantly
+- **🧹 Manual cache control** - Clear cache & history button in options panel
+- **🔍 Dynamic detection** - MutationObserver ensures button appears even on SPA navigation
+
 ### User Experience
 - **Dismissible notifications** - Color-coded feedback (loading, success, error)
 - **Adaptive UI** - Multiple fallback strategies for Songsterr's dynamic layout
@@ -44,6 +50,10 @@ A Chrome extension that adds a random song picker functionality to Songsterr.com
 4. **Press the keyboard shortcut** (default: "=" key)
 5. **Enjoy!** A random song from your favorites will load
 
+### Keyboard Shortcuts
+- **`=` (or custom key)**: Play random song (uses cache, avoids recent repeats)
+- **`Shift + =`**: Force refresh - clears cache & history, fetches fresh favorites
+
 ### First-Time Setup
 - Click the extension icon in Chrome toolbar
 - Customize keyboard shortcut if desired
@@ -51,6 +61,9 @@ A Chrome extension that adds a random song picker functionality to Songsterr.com
 
 ### Performance Tips
 - **Cache optimization**: Click Random multiple times within 1 minute to experience instant loading
+- **Variety**: Extension automatically avoids repeating the last 10 songs
+- **Force refresh**: Use Shift+key when you've added new favorites
+- **Manual control**: Use "Clear Cache & History" button in options panel
 - **Debug mode**: Enable to see cache hits/misses and performance metrics in console
 
 ## Development
@@ -143,6 +156,14 @@ See [deployment.md](.codeagent/current/deployment.md) for detailed deployment in
 
 ## Version History
 
+### v1.4.0 (2026-01-06) - Code Quality & Features
+- 🎯 **Constants extraction** - All magic numbers moved to named constants
+- 🎲 **Song history tracking** - Avoids repeating last 10 songs for better variety
+- ⚡ **Modifier key support** - Shift+key for force refresh (clears cache & history)
+- 🧹 **Cache clear button** - Manual control in options panel
+- 🔍 **MutationObserver** - Dynamic toolbar detection for SPAs
+- 📦 **Modular functions** - Better code organization and maintainability
+
 ### v1.3.0 (2026-01-06) - Performance & UX Improvements
 - ⚡ Added favorites caching (60-second TTL) for instant repeat clicks
 - 🔄 Added loading notification with visual feedback
@@ -168,12 +189,15 @@ See [deployment.md](.codeagent/current/deployment.md) for detailed deployment in
 - Every click: ~300ms (API call)
 - No visual feedback
 - No caching
+- Possible immediate repeats
 
-### After v1.3.0
+### After v1.4.0
 - First click: ~300ms (API call) + loading notification
 - Subsequent clicks (within 1 min): <10ms (cached) ⚡
 - **60x reduction** in API calls for active users
+- **No repeats** in last 10 songs (better variety)
 - Smooth animations and visual feedback
+- Force refresh option (Shift+key)
 
 ## Technical Details
 
@@ -190,10 +214,12 @@ See [deployment.md](.codeagent/current/deployment.md) for detailed deployment in
 - Songsterr API integration
 
 ### Code Quality
-- Comprehensive JSDoc documentation
-- Early return patterns for readability
-- Single responsibility functions
-- Proper error handling with try-catch-finally
+- **Constants-based configuration** (v1.4+) - All magic numbers extracted
+- **Comprehensive JSDoc documentation** - All functions documented
+- **Early return patterns** for readability
+- **Single responsibility functions** - Modular design
+- **Proper error handling** with try-catch-finally
+- **MutationObserver** for dynamic content (v1.4+)
 
 See [project_context.md](.codeagent/current/project_context.md) for detailed architecture documentation.
 
@@ -213,6 +239,12 @@ See [project_context.md](.codeagent/current/project_context.md) for detailed arc
 1. Enable debug mode
 2. Check console for "Using cached favorites" message
 3. Verify you're clicking within 60 seconds
+4. Try "Clear Cache & History" button in options panel
+
+### Getting same song repeatedly?
+1. Extension tracks last 10 songs to avoid repeats
+2. If you have fewer than 10 favorites, some repeats are inevitable
+3. Use Shift+key to force refresh and clear history
 
 ### More help
 - See [TESTING_GUIDE.md](TESTING_GUIDE.md) for detailed testing scenarios
@@ -230,11 +262,12 @@ Contributions are welcome! Please:
 
 ## Roadmap
 
-### Phase 3 (v1.4) - Code Quality
-- Extract magic numbers to constants
-- Add song history tracking (avoid repeats)
-- Support modifier keys (Shift+key for different behavior)
-- Use MutationObserver for dynamic toolbar detection
+### ✅ Phase 3 (v1.4) - Code Quality & Features - COMPLETE
+- ✅ Extract magic numbers to constants
+- ✅ Add song history tracking (avoid repeats)
+- ✅ Support modifier keys (Shift+key for force refresh)
+- ✅ Use MutationObserver for dynamic toolbar detection
+- ✅ Add cache clear button
 
 ### Phase 4 (v2.0) - Major Features
 - Migrate to TypeScript
