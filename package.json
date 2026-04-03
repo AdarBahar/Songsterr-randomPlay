@@ -3,7 +3,7 @@
   "version": "1.4.1",
   "scripts": {
     "build": "webpack --mode production",
-    "minify-css": "cleancss -o dist/styles.min.css src/*.css",
+    "minify-css": "cleancss -o dist/styles.min.css styles.css",
     "zip": "bestzip extension.zip dist/*",
     "compile": "npm run build && npm run minify-css && npm run zip"
   },
