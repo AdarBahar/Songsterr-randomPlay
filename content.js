@@ -210,9 +210,11 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
  * Attempts to clone existing toolbar styling for consistency
  * @returns {HTMLElement|null} The created button element or null if creation fails
  */
-const createRandomButton = () => {
+const createRandomButton = (templateButton = null) => {
     // Strategy 1: Try to clone an existing toolbar item (best styling match)
-    const existingButtons = document.querySelectorAll('a[class*="Gl5"], nav a, header a');
+    const existingButtons = templateButton
+        ? [templateButton]
+        : document.querySelectorAll('a[class*="Gl5"], nav a, header a');
 
     for (const existingButton of existingButtons) {
         if (existingButton.querySelector('svg') && existingButton.querySelector('div')) {
@@ -508,6 +510,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  * @type {Array<string>}
  */
 const TOOLBAR_SELECTORS = [
+    'nav#tablist',         // Current Songsterr top nav id
     'div.I12xi',           // Original selector
     'nav.Gl54yj',          // Current Songsterr nav element
     'header.Gl56d3',       // Current Songsterr header element
@@ -557,53 +560,84 @@ const injectRandomButton = (toolbar) => {
         return true;
     }
 
-    const randomButton = createRandomButton();
-    if (!randomButton) {
-        logDebug('Failed to create random button');
-        return false;
-    }
+    const attachClickHandler = (button) => {
+        if (!button) return;
 
-    randomButton.addEventListener('click', (e) => {
+        button.addEventListener('click', (e) => {
         // Check for Shift modifier on click too
-        if (e.shiftKey) {
-            logDebug('Shift + Random button clicked: force refresh');
-            showNotification('Refreshing favorites and clearing history...', 'info', 1500);
-            playRandomSong(true); // Force refresh
-        } else {
-            logDebug('Random button clicked');
-            playRandomSong();
-        }
-    });
+            if (e.shiftKey) {
+                logDebug('Shift + Random button clicked: force refresh');
+                showNotification('Refreshing favorites and clearing history...', 'info', 1500);
+                playRandomSong(true); // Force refresh
+            } else {
+                logDebug('Random button clicked');
+                playRandomSong();
+            }
+        });
+    };
 
     // Try multiple positioning strategies for best placement
     let inserted = false;
 
-    // Strategy 1: Insert into empty div next to logo (preferred position)
-    const emptyDivs = toolbar.querySelectorAll('div.Gl5687');
-    if (emptyDivs.length > 0) {
-        emptyDivs[0].appendChild(randomButton);
-        logDebug('Random button inserted into empty div.Gl5687');
-        inserted = true;
+    // Strategy 1: Inject into the Songsterr topbar action list
+    const tablist = toolbar.matches('nav#tablist')
+        ? toolbar
+        : toolbar.querySelector('nav#tablist') || document.querySelector('nav#tablist');
+    const topbarCenter = tablist?.querySelector('[class*="topbarCenter"]');
+    const templateWrapper = topbarCenter?.querySelector('[class*="itemWrapper"]');
+    const templateButton = templateWrapper?.querySelector('a');
+
+    if (topbarCenter && templateWrapper && templateButton) {
+        const randomButton = createRandomButton(templateButton);
+        if (randomButton) {
+            attachClickHandler(randomButton);
+
+            const randomWrapper = document.createElement('div');
+            randomWrapper.className = templateWrapper.className;
+            randomWrapper.appendChild(randomButton);
+            topbarCenter.appendChild(randomWrapper);
+
+            logDebug('Random button inserted into nav#tablist topbar center');
+            inserted = true;
+        }
     }
-    // Strategy 2: Insert right after the logo
-    else {
-        const logo = toolbar.querySelector('#logo, a[aria-label="Songsterr"]');
-        if (logo && logo.nextSibling) {
-            toolbar.insertBefore(randomButton, logo.nextSibling);
-            logDebug('Random button inserted after logo');
+
+    if (!inserted) {
+        const randomButton = createRandomButton();
+        if (!randomButton) {
+            logDebug('Failed to create random button');
+            return false;
+        }
+
+        attachClickHandler(randomButton);
+
+        // Strategy 2: Insert into empty div next to logo (legacy layout)
+        const emptyDivs = toolbar.querySelectorAll('div.Gl5687');
+        if (emptyDivs.length > 0) {
+            emptyDivs[0].appendChild(randomButton);
+            logDebug('Random button inserted into empty div.Gl5687');
             inserted = true;
         }
-        // Strategy 3: Insert at the beginning of toolbar
-        else if (toolbar.firstChild) {
-            toolbar.insertBefore(randomButton, toolbar.firstChild);
-            logDebug('Random button inserted at beginning of toolbar');
-            inserted = true;
-        }
-        // Strategy 4: Append to end (last resort)
+        // Strategy 3: Insert right after the logo
         else {
-            toolbar.appendChild(randomButton);
-            logDebug('Random button appended to toolbar (last resort)');
-            inserted = true;
+            const logo = toolbar.querySelector('#logo, a[aria-label="Songsterr"]');
+            if (logo && logo.nextSibling) {
+                toolbar.insertBefore(randomButton, logo.nextSibling);
+                logDebug('Random button inserted after logo');
+                inserted = true;
+            }
+            // Strategy 4: Insert at the beginning of toolbar
+            else if (toolbar.firstChild) {
+                toolbar.insertBefore(randomButton, toolbar.firstChild);
+                logDebug('Random button inserted at beginning of toolbar');
+                inserted = true;
+            }
+            // Strategy 5: Append to end (last resort)
+            else {
+                toolbar.appendChild(randomButton);
+                logDebug('Random button appended to toolbar (last resort)');
+                inserted = true;
+            }
         }
     }
 
