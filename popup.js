@@ -51,7 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.sync.get(['debug', 'shortcutKey'], (currentSettings) => {
             const sanitizedSettings = {
                 debug: 'debug' in settings ? Boolean(settings.debug) : currentSettings.debug,
-                shortcutKey: settings.shortcutKey ? settings.shortcutKey.slice(0, 20) : (currentSettings.shortcutKey || '=')
+                shortcutKey: 'shortcutKey' in settings
+                    ? settings.shortcutKey.slice(0, 20)
+                    : (currentSettings.shortcutKey || '=')
             };
 
             // Save to storage - this will trigger the storage.onChanged event

@@ -26,6 +26,9 @@ const NOTIFICATION_Z_INDEX = 10000;
 /** Animation slide distance in pixels */
 const SLIDE_DISTANCE_PX = 400;
 
+/** Vertical gap between stacked notifications in pixels */
+const NOTIFICATION_GAP_PX = 10;
+
 /** Default keyboard shortcut */
 const DEFAULT_SHORTCUT_KEY = '=';
 
@@ -89,6 +92,21 @@ const logDebug = (...args) => {
 };
 
 /**
+ * Computes the top offset for the next notification, stacked below any
+ * currently visible ones.
+ * @returns {number} Top position in pixels
+ */
+const getNextNotificationTop = () => {
+    let top = NOTIFICATION_TOP_PX;
+    activeNotifications.forEach(notif => {
+        if (notif.element && notif.element.parentNode) {
+            top += notif.element.offsetHeight + NOTIFICATION_GAP_PX;
+        }
+    });
+    return top;
+};
+
+/**
  * Updates positions of all active notifications to stack vertically
  */
 const updateNotificationPositions = () => {
@@ -96,7 +114,7 @@ const updateNotificationPositions = () => {
     activeNotifications.forEach(notif => {
         if (notif.element && notif.element.parentNode) {
             notif.element.style.top = `${offset}px`;
-            offset += notif.element.offsetHeight + 10; // 10px gap between notifications
+            offset += notif.element.offsetHeight + NOTIFICATION_GAP_PX;
         }
     });
 };
@@ -114,12 +132,7 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
     notification.textContent = message;
 
     // Calculate initial top position based on existing notifications
-    let topPosition = NOTIFICATION_TOP_PX;
-    activeNotifications.forEach(notif => {
-        if (notif.element && notif.element.parentNode) {
-            topPosition += notif.element.offsetHeight + 10; // 10px gap
-        }
-    });
+    const topPosition = getNextNotificationTop();
 
     notification.style.cssText = `
         position: fixed;
@@ -254,7 +267,6 @@ const createRandomButton = (templateButton = null) => {
                     }
                 }
 
-                button.addEventListener('click', (e) => e.preventDefault());
                 logDebug('Random button created by cloning existing button');
                 return button;
             } catch (error) {
@@ -299,7 +311,6 @@ const createRandomButton = (templateButton = null) => {
         if (img) img.style.opacity = '0.8';
     });
 
-    button.addEventListener('click', (e) => e.preventDefault());
     logDebug('Random button created with fallback method');
     return button;
 };
@@ -343,6 +354,16 @@ const fetchFavorites = async () => {
     logDebug('Cached', favoriteSongs.length, 'favorites');
 
     return favoriteSongs;
+};
+
+/**
+ * Clears the favorites cache and recently-played history.
+ * Single source of truth for both the force-refresh and popup reset paths.
+ */
+const resetCacheAndHistory = () => {
+    favoritesCache.data = null;
+    favoritesCache.timestamp = 0;
+    songHistory = [];
 };
 
 /**
@@ -403,8 +424,7 @@ const playRandomSong = async (forceRefresh = false) => {
     try {
         // Clear cache and history if force refresh
         if (forceRefresh) {
-            favoritesCache.data = null;
-            songHistory = [];
+            resetCacheAndHistory();
             logDebug('Force refresh: cache and history cleared');
         }
 
@@ -437,7 +457,6 @@ const playRandomSong = async (forceRefresh = false) => {
 
         logDebug('Navigating to random song:', randomSong.href);
         window.location.href = randomSong.href;
-        // Note: Navigation will dismiss the loading notification automatically
 
     } catch (error) {
         if (error.message === 'AUTH_REQUIRED') {
@@ -451,7 +470,8 @@ const playRandomSong = async (forceRefresh = false) => {
 
         logDebug('Error fetching favorites:', error);
     } finally {
-        // Always dismiss loading notification unless we're navigating
+        // Dismiss the loading notification. On the success path this triggers
+        // its slide-out just before the page navigates away.
         loadingNotification.dismiss();
     }
 };
@@ -502,9 +522,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
     } else if (message.action === 'clearCacheAndHistory') {
         // Clear favorites cache and song history
-        favoritesCache.data = null;
-        favoritesCache.timestamp = 0;
-        songHistory = [];
+        resetCacheAndHistory();
         logDebug('Cache and history cleared via popup');
         showNotification('Cache and history cleared!', 'success', 2000);
         sendResponse({ success: true });
@@ -570,7 +588,8 @@ const injectRandomButton = (toolbar) => {
         if (!button) return;
 
         button.addEventListener('click', (e) => {
-        // Check for Shift modifier on click too
+            e.preventDefault(); // href="#" is a placeholder; never navigate to it
+            // Check for Shift modifier on click too
             if (e.shiftKey) {
                 logDebug('Shift + Random button clicked: force refresh');
                 showNotification('Refreshing favorites and clearing history...', 'info', 1500);
