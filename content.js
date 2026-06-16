@@ -32,6 +32,12 @@ const DEFAULT_SHORTCUT_KEY = '=';
 /** Maximum song history size (to avoid repeats) */
 const MAX_SONG_HISTORY = 10;
 
+/** Debounce window for toolbar-observer mutation bursts in milliseconds */
+const OBSERVER_DEBOUNCE_MS = 200;
+
+/** Give up watching for the toolbar after this long in milliseconds */
+const OBSERVER_TIMEOUT_MS = 30000;
+
 /** Notification colors by type */
 const NOTIFICATION_COLORS = {
     error: '#f44336',
@@ -656,18 +662,29 @@ const injectRandomButton = (toolbar) => {
  */
 const setupToolbarObserver = () => {
     let hasInjected = false;
+    let debounceTimer = null;
+    let giveUpTimer = null;
 
-    const observer = new MutationObserver((mutations) => {
-        if (hasInjected) return;
+    const stop = () => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        if (giveUpTimer) clearTimeout(giveUpTimer);
+        observer.disconnect();
+    };
 
-        const toolbar = findToolbar();
-        if (toolbar) {
-            if (injectRandomButton(toolbar)) {
+    const observer = new MutationObserver(() => {
+        if (hasInjected || debounceTimer) return;
+
+        // Debounce: coalesce bursts of SPA mutations into a single toolbar
+        // check instead of running findToolbar() on every mutation.
+        debounceTimer = setTimeout(() => {
+            debounceTimer = null;
+            const toolbar = findToolbar();
+            if (toolbar && injectRandomButton(toolbar)) {
                 hasInjected = true;
-                observer.disconnect();
+                stop();
                 logDebug('Toolbar observer disconnected after successful injection');
             }
-        }
+        }, OBSERVER_DEBOUNCE_MS);
     });
 
     // Observe the entire document for changes
@@ -675,6 +692,15 @@ const setupToolbarObserver = () => {
         childList: true,
         subtree: true
     });
+
+    // Stop watching after a while so we don't run findToolbar() for the entire
+    // page lifetime on heavy pages where the toolbar never matches a selector.
+    giveUpTimer = setTimeout(() => {
+        if (!hasInjected) {
+            stop();
+            logDebug('Toolbar observer gave up after timeout');
+        }
+    }, OBSERVER_TIMEOUT_MS);
 
     logDebug('Toolbar observer set up');
     return observer;

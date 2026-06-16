@@ -3,9 +3,18 @@
  * Handles message passing and storage change broadcasting
  */
 
-console.log('Background script loaded');
+/**
+ * Logs only when debug mode is enabled in storage.
+ * Keeps the production service worker quiet (it re-runs on every spin-up).
+ * @param {...any} args - Arguments to log
+ */
+const logDebug = (...args) => {
+    chrome.storage.sync.get('debug', (data) => {
+        if (data.debug) console.log('[Background]', ...args);
+    });
+};
 
-chrome.runtime.onInstalled.addListener(() => console.log('Extension installed'));
+chrome.runtime.onInstalled.addListener(() => logDebug('Extension installed'));
 
 /**
  * Message handler for content script requests
