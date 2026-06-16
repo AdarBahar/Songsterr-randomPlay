@@ -119,7 +119,8 @@ const sanitizedSettings = {
 - No `eval()` or `Function()` constructor
 - No `innerHTML` with user input
 - Use `textContent` for text insertion
-- DOMParser for HTML parsing (Songsterr API response)
+- Favorites come from the Songsterr JSON API (`/api/favorites`); song URLs are
+  built from `songId` against a hardcoded `www.songsterr.com` base
 
 ### Injection Prevention
 - Content script doesn't execute arbitrary code
@@ -156,7 +157,7 @@ const sanitizedSettings = {
 - No mixed content issues
 
 ### API Endpoints
-- **Favorites**: `https://www.songsterr.com/a/wa/favorites`
+- **Favorites**: `https://www.songsterr.com/api/favorites` (JSON)
 - **Same-origin**: Extension only calls Songsterr's own API
 - **No external APIs**: No third-party services
 

@@ -284,10 +284,11 @@ const setupToolbarObserver = () => {
 ## Gotchas & Lessons Learned
 
 ### Songsterr API
-- Favorites endpoint: `https://www.songsterr.com/a/wa/favorites`
-- Requires `credentials: 'same-origin'` for authentication
-- Returns HTML (not JSON) - must parse with DOMParser
-- Songs have `data-song` attribute on anchor tags
+- Favorites endpoint: `https://www.songsterr.com/api/favorites` (JSON)
+- Requires `credentials: 'same-origin'` for authentication; returns 401 when logged out
+- Each item: `songId, artist, title, hasPlayer, isJunk, addedAt, lastViewedAt`, etc.
+- Build a tab URL from `songId`: `/a/wsa/{slug}-tab-s{songId}` (slug is canonicalized server-side, so it need not be exact; no track suffix = default track)
+- Legacy `/a/wa/favorites` now 302-redirects to the `/favorites` SPA and is no longer used
 
 ### Chrome Extension Permissions
 - Only need `storage` permission (minimal permissions = better security)

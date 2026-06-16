@@ -41,6 +41,12 @@ const OBSERVER_DEBOUNCE_MS = 200;
 /** Give up watching for the toolbar after this long in milliseconds */
 const OBSERVER_TIMEOUT_MS = 30000;
 
+/** Songsterr JSON endpoint returning the user's favorites */
+const FAVORITES_API_URL = 'https://www.songsterr.com/api/favorites';
+
+/** Base path for a canonical Songsterr tab URL */
+const SONG_BASE_URL = 'https://www.songsterr.com/a/wsa/';
+
 /** Notification colors by type */
 const NOTIFICATION_COLORS = {
     error: '#f44336',
@@ -316,8 +322,30 @@ const createRandomButton = (templateButton = null) => {
 };
 
 /**
- * Fetches favorites from Songsterr with caching
- * @returns {Promise<Array>} Array of favorite song elements
+ * Converts text into a URL slug (lowercase, non-alphanumerics collapsed to '-').
+ * Songsterr canonicalizes the slug server-side, so an approximate slug is fine.
+ * @param {string} text - Text to slugify
+ * @returns {string} URL-safe slug
+ */
+const slugify = (text) =>
+    String(text)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+/**
+ * Builds the canonical Songsterr tab URL for a favorite.
+ * No track suffix is added so Songsterr opens the song's default track.
+ * @param {Object} fav - Favorite object from the API ({ songId, artist, title })
+ * @returns {string} Absolute tab URL on www.songsterr.com
+ */
+const buildSongUrl = (fav) =>
+    `${SONG_BASE_URL}${slugify(`${fav.artist} ${fav.title}`)}-tab-s${fav.songId}`;
+
+/**
+ * Fetches favorites from the Songsterr JSON API with caching.
+ * Drops broken ("junk") entries and anything without a usable songId.
+ * @returns {Promise<Array<Object>>} Array of favorite objects
  */
 const fetchFavorites = async () => {
     const now = Date.now();
@@ -329,7 +357,7 @@ const fetchFavorites = async () => {
     }
 
     logDebug('Fetching fresh favorites from API...');
-    const response = await fetch('https://www.songsterr.com/a/wa/favorites', {
+    const response = await fetch(FAVORITES_API_URL, {
         credentials: 'same-origin',
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
@@ -344,14 +372,18 @@ const fetchFavorites = async () => {
         }
     }
 
-    const html = await response.text();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const favoriteSongs = Array.from(doc.querySelectorAll('a[data-song]'));
+    const data = await response.json();
+    const allFavorites = Array.isArray(data)
+        ? data
+        : (data.favorites || data.items || data.results || []);
+
+    // Drop broken entries and anything missing an id we can build a URL from
+    const favoriteSongs = allFavorites.filter(fav => fav && fav.songId && !fav.isJunk);
 
     // Update cache
     favoritesCache.data = favoriteSongs;
     favoritesCache.timestamp = now;
-    logDebug('Cached', favoriteSongs.length, 'favorites');
+    logDebug('Cached', favoriteSongs.length, 'favorites', `(filtered ${allFavorites.length - favoriteSongs.length} junk)`);
 
     return favoriteSongs;
 };
@@ -367,12 +399,12 @@ const resetCacheAndHistory = () => {
 };
 
 /**
- * Adds a song URL to the history to avoid immediate repeats
+ * Adds a song id to the history to avoid immediate repeats
  * Maintains a maximum history size
- * @param {string} songUrl - The URL of the song to add to history
+ * @param {number|string} songId - The id of the song to add to history
  */
-const addToSongHistory = (songUrl) => {
-    songHistory.push(songUrl);
+const addToSongHistory = (songId) => {
+    songHistory.push(songId);
     if (songHistory.length > MAX_SONG_HISTORY) {
         songHistory.shift(); // Remove oldest entry
     }
@@ -381,29 +413,36 @@ const addToSongHistory = (songUrl) => {
 
 /**
  * Checks if a song is in the recent history
- * @param {string} songUrl - The URL to check
+ * @param {number|string} songId - The id to check
  * @returns {boolean} True if song is in recent history
  */
-const isInRecentHistory = (songUrl) => {
-    return songHistory.includes(songUrl);
+const isInRecentHistory = (songId) => {
+    return songHistory.includes(songId);
 };
 
 /**
- * Selects a random song from favorites, avoiding recent history if possible
- * @param {Array} favoriteSongs - Array of favorite song elements
- * @returns {HTMLElement|null} Selected song element or null if none available
+ * Selects a random song from favorites.
+ * Prefers songs with an interactive player, then avoids recent history,
+ * degrading gracefully so a song is always returned when input is non-empty.
+ * @param {Array<Object>} favoriteSongs - Array of favorite objects
+ * @returns {Object|null} Selected favorite or null if none available
  */
 const selectRandomSong = (favoriteSongs) => {
-    // Filter out songs in recent history
-    const availableSongs = favoriteSongs.filter(song => !isInRecentHistory(song.href));
+    // Prefer songs that have an interactive player; fall back to all
+    const playable = favoriteSongs.filter(song => song.hasPlayer);
+    const pool = playable.length > 0 ? playable : favoriteSongs;
 
-    // If all songs are in history (or very few favorites), use all songs
-    const songsToChooseFrom = availableSongs.length > 0 ? availableSongs : favoriteSongs;
+    // Avoid recently played songs when possible
+    const available = pool.filter(song => !isInRecentHistory(song.songId));
+    const songsToChooseFrom = available.length > 0 ? available : pool;
 
-    if (availableSongs.length === 0 && favoriteSongs.length > 0) {
-        logDebug('All songs in history, choosing from all favorites');
-    } else if (availableSongs.length < favoriteSongs.length) {
-        logDebug(`Filtered ${favoriteSongs.length - availableSongs.length} songs from history`);
+    if (playable.length < favoriteSongs.length) {
+        logDebug(`Excluded ${favoriteSongs.length - playable.length} songs without a player`);
+    }
+    if (available.length === 0 && pool.length > 0) {
+        logDebug('All songs in history, choosing from full pool');
+    } else if (available.length < pool.length) {
+        logDebug(`Filtered ${pool.length - available.length} songs from history`);
     }
 
     return songsToChooseFrom[Math.floor(Math.random() * songsToChooseFrom.length)];
@@ -444,19 +483,13 @@ const playRandomSong = async (forceRefresh = false) => {
             return;
         }
 
-        const url = new URL(randomSong.href);
-
-        if (url.hostname !== 'www.songsterr.com') {
-            showNotification('Invalid song URL detected', 'error');
-            logDebug('Invalid hostname:', url.hostname);
-            return;
-        }
+        const songUrl = buildSongUrl(randomSong);
 
         // Add to history before navigating
-        addToSongHistory(randomSong.href);
+        addToSongHistory(randomSong.songId);
 
-        logDebug('Navigating to random song:', randomSong.href);
-        window.location.href = randomSong.href;
+        logDebug('Navigating to random song:', songUrl);
+        window.location.href = songUrl;
 
     } catch (error) {
         if (error.message === 'AUTH_REQUIRED') {

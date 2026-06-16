@@ -15,7 +15,7 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 - **Build Tools**: Webpack 5, Terser (minification), Clean-CSS
 - **APIs Used**:
   - Chrome Extension APIs (storage, runtime, tabs)
-  - Songsterr.com favorites endpoint (`/a/wa/favorites`)
+  - Songsterr.com favorites JSON API (`/api/favorites`)
 
 ## Key Features
 
