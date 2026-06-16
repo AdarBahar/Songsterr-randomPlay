@@ -49,16 +49,13 @@ npm run build
 ### Available Commands
 
 ```bash
-# Build for production (minified)
+# Build for production (minified) -> dist/
 npm run build
 
-# Minify CSS (currently unused)
-npm run minify-css
-
-# Create extension.zip for distribution
+# Create extension.zip for distribution (files at zip root)
 npm run zip
 
-# Full compile (build + minify + zip)
+# Full compile (build + zip)
 npm run compile
 ```
 
