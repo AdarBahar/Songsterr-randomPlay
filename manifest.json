@@ -31,6 +31,10 @@
             "128": "images/icon128.png"
         }
     },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true
+    },
     "web_accessible_resources": [
         {
         "resources": [

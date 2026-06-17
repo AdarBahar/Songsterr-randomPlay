@@ -39,10 +39,6 @@
       border-bottom: 2px solid rgba(138, 180, 248, 0.2);
     }
 
-    .logo {
-      display: none;
-    }
-
     h1 {
       font-size: 20px;
       font-weight: 600;
@@ -145,7 +141,7 @@
       font-size: 11px;
     }
 
-    /* Options Button */
+    /* Open Settings Button */
     .options-toggle {
       width: 100%;
       background: linear-gradient(180deg, #8ab4f8 0%, #7ba3e8 100%);
@@ -169,191 +165,6 @@
 
     .options-toggle:active {
       transform: translateY(0);
-    }
-    /* Options Panel */
-    .options-panel {
-      background: rgba(48, 49, 52, 0.6);
-      border-radius: 8px;
-      border: 1px solid rgba(138, 180, 248, 0.15);
-      margin-bottom: 16px;
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out;
-    }
-
-    .options-panel.open {
-      max-height: 400px;
-      opacity: 1;
-      padding: 16px;
-    }
-
-    .option-group {
-      margin-bottom: 16px;
-    }
-
-    .option-group:last-child {
-      margin-bottom: 0;
-    }
-
-    .option-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #8ab4f8;
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    .option-description {
-      font-size: 12px;
-      color: #9aa0a6;
-      margin-bottom: 8px;
-      line-height: 1.4;
-    }
-
-    .option-control {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .key-display {
-      background: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%);
-      border: 1px solid #5f6368;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      font-weight: 600;
-      color: #e8eaed;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      min-width: 50px;
-      text-align: center;
-    }
-
-    .custom-weights {
-      display: none;
-      margin-top: 12px;
-    }
-
-    .custom-weights.show {
-      display: block;
-    }
-
-    .slider-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .slider-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .slider-label {
-      flex: 1;
-      font-size: 12px;
-      color: #bdc1c6;
-    }
-
-    .slider-row input[type="range"] {
-      flex: 1;
-      accent-color: #8ab4f8;
-      cursor: pointer;
-    }
-
-    .slider-value {
-      min-width: 28px;
-      text-align: right;
-      font-size: 12px;
-      font-weight: 600;
-      color: #8ab4f8;
-      font-family: 'Courier New', monospace;
-    }
-
-    .instrument-select {
-      width: 100%;
-      background: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%);
-      border: 1px solid #5f6368;
-      border-radius: 4px;
-      padding: 8px 10px;
-      font-size: 13px;
-      font-weight: 500;
-      color: #e8eaed;
-      cursor: pointer;
-      transition: border-color 0.2s ease;
-    }
-
-    .instrument-select:hover {
-      border-color: #8ab4f8;
-    }
-
-    .instrument-select:focus {
-      outline: none;
-      border-color: #8ab4f8;
-    }
-
-    .btn-secondary {
-      background: #5f6368;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
-      color: #e8eaed;
-      transition: all 0.2s ease;
-      flex: 1;
-    }
-
-    .btn-secondary:hover {
-      background: #7e8183;
-    }
-
-    .btn-danger {
-      background: #d93025;
-      width: 100%;
-      border: none;
-      padding: 10px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      color: white;
-      transition: all 0.2s ease;
-    }
-
-    .btn-danger:hover {
-      background: #ea4335;
-    }
-
-    .checkbox-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 4px;
-      transition: background 0.2s ease;
-    }
-
-    .checkbox-wrapper:hover {
-      background: rgba(138, 180, 248, 0.1);
-    }
-
-    input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-      accent-color: #8ab4f8;
-    }
-
-    .checkbox-wrapper label {
-      cursor: pointer;
-      font-size: 13px;
-      color: #bdc1c6;
-      flex: 1;
     }
 
     /* Footer */
@@ -401,32 +212,12 @@
       font-size: 16px;
       flex-shrink: 0;
     }
-
-    /* Listening state for change key button */
-    .btn-secondary.listening {
-      background: #8ab4f8;
-      color: #1a1a2e;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    /* Divider */
-    .divider {
-      height: 1px;
-      background: rgba(138, 180, 248, 0.1);
-      margin: 16px 0;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <div class="logo">🎸</div>
       <h1>Random Favorite Picker</h1>
       <p class="subtitle">for Songsterr</p>
     </div>
@@ -445,7 +236,6 @@
         <span>⌨️</span>
         <span>Keyboard Shortcuts</span>
       </div>
-      <p class="option-description">Works while a Songsterr tab is focused</p>
       <div class="shortcut-row">
         <span class="shortcut-label">Play random song</span>
         <span class="kbd" id="shortcutKeyDisplay">=</span>
@@ -460,83 +250,8 @@
       </div>
     </div>
 
-    <!-- Options Toggle Button -->
-    <button id="optionsBtn" class="options-toggle">⚙️ Settings</button>
-
-    <!-- Options Panel -->
-    <div id="optionsPanel" class="options-panel">
-      <!-- Randomization -->
-      <div class="option-group">
-        <label class="option-label" for="weightPreset">Randomization</label>
-        <p class="option-description">Bias random picks toward newer or less-played favorites</p>
-        <select id="weightPreset" class="instrument-select">
-          <option value="off">Pure random</option>
-          <option value="new">Discover new</option>
-          <option value="forgotten">Revisit forgotten</option>
-          <option value="both">Fresh &amp; forgotten</option>
-          <option value="custom">Custom…</option>
-        </select>
-        <div id="customWeights" class="custom-weights">
-          <div class="slider-row">
-            <span class="slider-label">Favor newly added</span>
-            <input type="range" id="newnessSlider" min="1" max="10" step="1" value="1">
-            <span class="slider-value" id="newnessValue">1×</span>
-          </div>
-          <div class="slider-row">
-            <span class="slider-label">Favor least played</span>
-            <input type="range" id="leastPlayedSlider" min="1" max="10" step="1" value="1">
-            <span class="slider-value" id="leastPlayedValue">1×</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Keyboard Shortcut -->
-      <div class="option-group">
-        <label class="option-label">Keyboard Shortcut</label>
-        <p class="option-description">Customize the key to trigger random song playback</p>
-        <div class="option-control">
-          <span class="key-display" id="currentKey">=</span>
-          <button id="changeKeyBtn" class="btn-secondary">Change Key</button>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Preferred Instrument -->
-      <div class="option-group">
-        <label class="option-label" for="preferredInstrument">Preferred Instrument</label>
-        <p class="option-description">Open this instrument's track when the song has one (otherwise the default track)</p>
-        <select id="preferredInstrument" class="instrument-select">
-          <option value="default">Default track</option>
-          <option value="guitar">Guitar</option>
-          <option value="bass">Bass</option>
-          <option value="drums">Drums</option>
-        </select>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Debug Mode -->
-      <div class="option-group">
-        <label class="option-label">Debug Mode</label>
-        <p class="option-description">Show detailed logs in browser console for troubleshooting</p>
-        <div class="checkbox-wrapper">
-          <input type="checkbox" id="debugMode">
-          <label for="debugMode">Enable debug mode</label>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Clear Cache -->
-      <div class="option-group">
-        <label class="option-label">Cache & History</label>
-        <p class="option-description">Clear cached favorites and song history to force a fresh fetch</p>
-        <button id="clearCacheBtn" class="btn-danger">🗑️ Clear Cache & History</button>
-      </div>
-    </div>
+    <!-- Open Settings -->
+    <button id="openSettingsBtn" class="options-toggle">⚙️ Open Settings</button>
 
     <!-- What it does -->
     <div class="info-section">
@@ -546,8 +261,8 @@
       </div>
       <ul class="info-list">
         <li>Plays a random song from your Songsterr favorites</li>
+        <li>Can favor newly added or least-played songs (in Settings)</li>
         <li>Avoids repeating the last 10 songs</li>
-        <li>Caches favorites for faster loading (60 seconds)</li>
         <li>Works via button click or keyboard shortcut</li>
       </ul>
     </div>

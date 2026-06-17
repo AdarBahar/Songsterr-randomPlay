@@ -6,7 +6,8 @@ module.exports = {
   entry: {
     background: './background.js',
     content: './content.js',
-    popup: './popup.js'
+    popup: './popup.js',
+    options: './options.js'
   },
   output: {
     filename: '[name].js',
@@ -40,6 +41,7 @@ module.exports = {
           },
         },
         { from: "popup.html", to: "popup.html" },
+        { from: "options.html", to: "options.html" },
         { from: "images", to: "images" },
         // Add any other static assets that need to be copied
       ],

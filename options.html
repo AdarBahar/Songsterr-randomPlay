@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Random Favorite Picker</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #e8eaed;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      line-height: 1.6;
+      padding: 32px 16px;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid rgba(138, 180, 248, 0.2);
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      color: #8ab4f8;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #9aa0a6;
+      margin: 0;
+    }
+
+    .card {
+      background: rgba(48, 49, 52, 0.6);
+      border-radius: 10px;
+      border: 1px solid rgba(138, 180, 248, 0.15);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+
+    .option-group { margin-bottom: 20px; }
+    .option-group:last-child { margin-bottom: 0; }
+
+    .option-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: #8ab4f8;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .option-description {
+      font-size: 13px;
+      color: #9aa0a6;
+      margin: 0 0 12px 0;
+      line-height: 1.4;
+    }
+
+    .option-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .instrument-select,
+    .weight-select {
+      width: 100%;
+      background: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%);
+      border: 1px solid #5f6368;
+      border-radius: 4px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #e8eaed;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+
+    .instrument-select:hover,
+    .weight-select:hover,
+    .instrument-select:focus,
+    .weight-select:focus {
+      outline: none;
+      border-color: #8ab4f8;
+    }
+
+    .custom-weights {
+      display: none;
+      margin-top: 16px;
+    }
+
+    .custom-weights.show { display: block; }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .slider-row:last-child { margin-bottom: 0; }
+
+    .slider-label {
+      flex: 0 0 150px;
+      font-size: 13px;
+      color: #bdc1c6;
+    }
+
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: #8ab4f8;
+      cursor: pointer;
+    }
+
+    .slider-value {
+      min-width: 32px;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 600;
+      color: #8ab4f8;
+      font-family: 'Courier New', monospace;
+    }
+
+    .key-display {
+      background: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%);
+      border: 1px solid #5f6368;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: #e8eaed;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      min-width: 56px;
+      text-align: center;
+    }
+
+    .btn-secondary {
+      background: #5f6368;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: #e8eaed;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover { background: #7e8183; }
+
+    .btn-secondary.listening {
+      background: #8ab4f8;
+      color: #1a1a2e;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .btn-danger {
+      background: #d93025;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: white;
+      transition: all 0.2s ease;
+    }
+
+    .btn-danger:hover { background: #ea4335; }
+
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #8ab4f8;
+    }
+
+    .checkbox-wrapper label {
+      cursor: pointer;
+      font-size: 14px;
+      color: #bdc1c6;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #9aa0a6;
+      text-align: center;
+      padding-top: 16px;
+      margin-top: 8px;
+    }
+
+    .footer a {
+      color: #8ab4f8;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      color: #aecbfa;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Settings</h1>
+      <p class="subtitle">Random Favorite Picker for Songsterr</p>
+    </div>
+
+    <!-- Randomization -->
+    <div class="card">
+      <div class="option-group">
+        <label class="option-label" for="weightPreset">Randomization</label>
+        <p class="option-description">Bias random picks toward newer or less-played favorites. "Pure random" gives every favorite an equal chance.</p>
+        <select id="weightPreset" class="weight-select">
+          <option value="off">Pure random</option>
+          <option value="new">Discover new</option>
+          <option value="forgotten">Revisit forgotten</option>
+          <option value="both">Fresh &amp; forgotten</option>
+          <option value="custom">Custom…</option>
+        </select>
+        <div id="customWeights" class="custom-weights">
+          <div class="slider-row">
+            <span class="slider-label">Favor newly added</span>
+            <input type="range" id="newnessSlider" min="1" max="10" step="1" value="1">
+            <span class="slider-value" id="newnessValue">1×</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">Favor least played</span>
+            <input type="range" id="leastPlayedSlider" min="1" max="10" step="1" value="1">
+            <span class="slider-value" id="leastPlayedValue">1×</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preferred Instrument -->
+    <div class="card">
+      <div class="option-group">
+        <label class="option-label" for="preferredInstrument">Preferred Instrument</label>
+        <p class="option-description">Open this instrument's track when the song has one (otherwise the default track).</p>
+        <select id="preferredInstrument" class="instrument-select">
+          <option value="default">Default track</option>
+          <option value="guitar">Guitar</option>
+          <option value="bass">Bass</option>
+          <option value="drums">Drums</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Keyboard Shortcut -->
+    <div class="card">
+      <div class="option-group">
+        <label class="option-label">Keyboard Shortcut</label>
+        <p class="option-description">Customize the key to trigger random song playback (while a Songsterr tab is focused).</p>
+        <div class="option-control">
+          <span class="key-display" id="currentKey">=</span>
+          <button id="changeKeyBtn" class="btn-secondary">Change Key</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Debug Mode -->
+    <div class="card">
+      <div class="option-group">
+        <label class="option-label">Debug Mode</label>
+        <p class="option-description">Show detailed logs in the browser console for troubleshooting.</p>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="debugMode">
+          <label for="debugMode">Enable debug mode</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clear Cache -->
+    <div class="card">
+      <div class="option-group">
+        <label class="option-label">Cache &amp; History</label>
+        <p class="option-description">Clear cached favorites and song history to force a fresh fetch.</p>
+        <button id="clearCacheBtn" class="btn-danger">🗑️ Clear Cache &amp; History</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>&copy; <span id="current-year"></span> Adar Bahar &middot;
+        <a href="https://github.com/AdarBahar/Songsterr-randomPlay" target="_blank">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
