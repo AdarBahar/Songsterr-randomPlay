@@ -9,7 +9,21 @@ document.addEventListener('DOMContentLoaded', () => {
         optionsPanel: document.getElementById('optionsPanel'),
         currentYear: document.getElementById('current-year'),
         clearCacheBtn: document.getElementById('clearCacheBtn'),
-        preferredInstrument: document.getElementById('preferredInstrument')
+        preferredInstrument: document.getElementById('preferredInstrument'),
+        weightPreset: document.getElementById('weightPreset'),
+        customWeights: document.getElementById('customWeights'),
+        newnessSlider: document.getElementById('newnessSlider'),
+        leastPlayedSlider: document.getElementById('leastPlayedSlider'),
+        newnessValue: document.getElementById('newnessValue'),
+        leastPlayedValue: document.getElementById('leastPlayedValue')
+    };
+
+    // Randomization presets -> (newnessBoost, leastPlayedBoost)
+    const WEIGHT_PRESETS = {
+        off:       { newnessBoost: 1, leastPlayedBoost: 1 },
+        new:       { newnessBoost: 8, leastPlayedBoost: 1 },
+        forgotten: { newnessBoost: 1, leastPlayedBoost: 8 },
+        both:      { newnessBoost: 5, leastPlayedBoost: 5 }
     };
 
     let isListening = false;
@@ -29,17 +43,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    /**
+     * Reflects the randomization settings in the UI (preset, sliders, labels).
+     * @param {string} mode - Preset key or 'custom'
+     * @param {number} newnessBoost
+     * @param {number} leastPlayedBoost
+     */
+    const applyWeightUI = (mode, newnessBoost, leastPlayedBoost) => {
+        elements.weightPreset.value = mode;
+        elements.newnessSlider.value = newnessBoost;
+        elements.leastPlayedSlider.value = leastPlayedBoost;
+        elements.newnessValue.textContent = `${newnessBoost}×`;
+        elements.leastPlayedValue.textContent = `${leastPlayedBoost}×`;
+        elements.customWeights.classList.toggle('show', mode === 'custom');
+    };
+
     // Load saved settings
-    chrome.storage.sync.get(['debug', 'shortcutKey', 'preferredInstrument'], (data) => {
-        if (!chrome.runtime.lastError) {
-            elements.debugToggle.checked = data.debug || false;
-            const key = data.shortcutKey || '=';
-            elements.currentKey.textContent = key;
-            elements.shortcutKeyDisplay.textContent = key;
-            elements.shortcutKeyDisplay2.textContent = key;
-            elements.preferredInstrument.value = data.preferredInstrument || 'default';
+    chrome.storage.sync.get(
+        ['debug', 'shortcutKey', 'preferredInstrument', 'weightMode', 'newnessBoost', 'leastPlayedBoost'],
+        (data) => {
+            if (!chrome.runtime.lastError) {
+                elements.debugToggle.checked = data.debug || false;
+                const key = data.shortcutKey || '=';
+                elements.currentKey.textContent = key;
+                elements.shortcutKeyDisplay.textContent = key;
+                elements.shortcutKeyDisplay2.textContent = key;
+                elements.preferredInstrument.value = data.preferredInstrument || 'default';
+                applyWeightUI(
+                    data.weightMode || 'off',
+                    data.newnessBoost || 1,
+                    data.leastPlayedBoost || 1
+                );
+            }
         }
-    });
+    );
 
     /**
      * Validates and saves settings to Chrome storage
@@ -49,10 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {string} [settings.shortcutKey] - Keyboard shortcut key
      */
     const VALID_INSTRUMENTS = ['default', 'guitar', 'bass', 'drums'];
+    const VALID_WEIGHT_MODES = ['off', 'new', 'forgotten', 'both', 'custom'];
+
+    // Clamp a boost to the integer slider range [1, 10]
+    const clampBoost = (value, fallback) => {
+        const n = Math.round(Number(value));
+        if (Number.isNaN(n)) return fallback;
+        return Math.min(10, Math.max(1, n));
+    };
 
     const saveSettings = (settings) => {
         // Get current settings first
-        chrome.storage.sync.get(['debug', 'shortcutKey', 'preferredInstrument'], (currentSettings) => {
+        const keys = ['debug', 'shortcutKey', 'preferredInstrument', 'weightMode', 'newnessBoost', 'leastPlayedBoost'];
+        chrome.storage.sync.get(keys, (currentSettings) => {
             const sanitizedSettings = {
                 debug: 'debug' in settings ? Boolean(settings.debug) : currentSettings.debug,
                 shortcutKey: 'shortcutKey' in settings
@@ -60,7 +106,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     : (currentSettings.shortcutKey || '='),
                 preferredInstrument: 'preferredInstrument' in settings
                     ? (VALID_INSTRUMENTS.includes(settings.preferredInstrument) ? settings.preferredInstrument : 'default')
-                    : (currentSettings.preferredInstrument || 'default')
+                    : (currentSettings.preferredInstrument || 'default'),
+                weightMode: 'weightMode' in settings
+                    ? (VALID_WEIGHT_MODES.includes(settings.weightMode) ? settings.weightMode : 'off')
+                    : (currentSettings.weightMode || 'off'),
+                newnessBoost: 'newnessBoost' in settings
+                    ? clampBoost(settings.newnessBoost, 1)
+                    : (currentSettings.newnessBoost || 1),
+                leastPlayedBoost: 'leastPlayedBoost' in settings
+                    ? clampBoost(settings.leastPlayedBoost, 1)
+                    : (currentSettings.leastPlayedBoost || 1)
             };
 
             // Save to storage - this will trigger the storage.onChanged event
@@ -84,6 +139,41 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.preferredInstrument.addEventListener('change', () => {
         saveSettings({ preferredInstrument: elements.preferredInstrument.value });
     });
+
+    // Randomization preset handler
+    elements.weightPreset.addEventListener('change', () => {
+        const mode = elements.weightPreset.value;
+        if (mode === 'custom') {
+            // Keep current slider values; just reveal the controls
+            const newnessBoost = Number(elements.newnessSlider.value);
+            const leastPlayedBoost = Number(elements.leastPlayedSlider.value);
+            applyWeightUI('custom', newnessBoost, leastPlayedBoost);
+            saveSettings({ weightMode: 'custom', newnessBoost, leastPlayedBoost });
+        } else {
+            const preset = WEIGHT_PRESETS[mode];
+            applyWeightUI(mode, preset.newnessBoost, preset.leastPlayedBoost);
+            saveSettings({ weightMode: mode, ...preset });
+        }
+    });
+
+    // Custom slider handlers: live label update on input, persist on release
+    const updateSliderLabels = () => {
+        elements.newnessValue.textContent = `${elements.newnessSlider.value}×`;
+        elements.leastPlayedValue.textContent = `${elements.leastPlayedSlider.value}×`;
+    };
+    const saveSliderValues = () => {
+        elements.weightPreset.value = 'custom';
+        elements.customWeights.classList.add('show');
+        saveSettings({
+            weightMode: 'custom',
+            newnessBoost: Number(elements.newnessSlider.value),
+            leastPlayedBoost: Number(elements.leastPlayedSlider.value)
+        });
+    };
+    elements.newnessSlider.addEventListener('input', updateSliderLabels);
+    elements.leastPlayedSlider.addEventListener('input', updateSliderLabels);
+    elements.newnessSlider.addEventListener('change', saveSliderValues);
+    elements.leastPlayedSlider.addEventListener('change', saveSliderValues);
 
     // Shortcut key handler with validation
     elements.changeKeyBtn.addEventListener('click', () => {

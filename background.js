@@ -42,6 +42,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Required for async response
     }
 
+    if (message.action === 'getWeightSettings') {
+        chrome.storage.sync.get(['newnessBoost', 'leastPlayedBoost'], (data) => {
+            sendResponse({
+                newnessBoost: data.newnessBoost || 1,
+                leastPlayedBoost: data.leastPlayedBoost || 1
+            });
+        });
+        return true; // Required for async response
+    }
+
     // Don't return true for unhandled messages
 });
 
@@ -61,6 +71,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         }
         if (changes.preferredInstrument) {
             settingsChanged.preferredInstrument = changes.preferredInstrument.newValue;
+        }
+        if (changes.newnessBoost) {
+            settingsChanged.newnessBoost = changes.newnessBoost.newValue;
+        }
+        if (changes.leastPlayedBoost) {
+            settingsChanged.leastPlayedBoost = changes.leastPlayedBoost.newValue;
         }
 
         // Only broadcast if there are changes

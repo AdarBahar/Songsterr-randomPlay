@@ -35,6 +35,10 @@ const DEFAULT_SHORTCUT_KEY = '=';
 /** Default preferred instrument ('default' = use the song's default track) */
 const DEFAULT_PREFERRED_INSTRUMENT = 'default';
 
+/** Default randomization boosts (1 = no bias / uniform random for that signal) */
+const DEFAULT_NEWNESS_BOOST = 1;
+const DEFAULT_LEAST_PLAYED_BOOST = 1;
+
 /**
  * Maps a preferred-instrument setting to the favorite field holding the
  * popular track index for that instrument. 'default' is intentionally absent.
@@ -81,6 +85,12 @@ let currentShortcutKey = DEFAULT_SHORTCUT_KEY;
 
 /** @type {string} Preferred instrument: 'default', 'guitar', 'bass', or 'drums' */
 let preferredInstrument = DEFAULT_PREFERRED_INSTRUMENT;
+
+/** @type {number} Max-boost ratio (newest vs oldest) for the 'newly added' signal */
+let newnessBoost = DEFAULT_NEWNESS_BOOST;
+
+/** @type {number} Max-boost ratio (least vs most recently viewed) for the 'least played' signal */
+let leastPlayedBoost = DEFAULT_LEAST_PLAYED_BOOST;
 
 /**
  * Cache for favorites to reduce API calls
@@ -447,9 +457,71 @@ const isInRecentHistory = (songId) => {
 };
 
 /**
+ * Coerces a timestamp value (epoch number, ISO string, or null) to a
+ * comparable number. Missing/unparseable values sort oldest (0).
+ * @param {number|string|null|undefined} value
+ * @returns {number} Comparable timestamp
+ */
+const toTime = (value) => {
+    if (value == null) return 0;
+    if (typeof value === 'number') return value;
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+};
+
+/**
+ * Assigns each song a rank score in [0,1] by ascending `valueFn`, where the
+ * highest value gets 1 and the lowest gets 0. Ties resolve by sort position.
+ * @param {Array<Object>} songs
+ * @param {(song: Object) => number} valueFn
+ * @returns {Map<number|string, number>} songId -> score
+ */
+const rankScores = (songs, valueFn) => {
+    const scores = new Map();
+    if (songs.length <= 1) {
+        songs.forEach(s => scores.set(s.songId, 0));
+        return scores;
+    }
+    const sorted = [...songs].sort((a, b) => valueFn(a) - valueFn(b));
+    sorted.forEach((s, i) => scores.set(s.songId, i / (sorted.length - 1)));
+    return scores;
+};
+
+/**
+ * Picks a song with probability proportional to its weight.
+ * weight = newnessBoost^newScore * leastPlayedBoost^(1 - viewScore), so:
+ *  - higher newnessBoost favors recently added songs (large addedAt)
+ *  - higher leastPlayedBoost favors least-recently / never viewed songs
+ * Falls back to uniform when both boosts are off (1) or only one song remains.
+ * @param {Array<Object>} songs - Candidate songs
+ * @returns {Object} Selected song
+ */
+const weightedPick = (songs) => {
+    if (songs.length <= 1 || (newnessBoost <= 1 && leastPlayedBoost <= 1)) {
+        return songs[Math.floor(Math.random() * songs.length)];
+    }
+
+    const newScore = rankScores(songs, s => toTime(s.addedAt));
+    const viewScore = rankScores(songs, s => toTime(s.lastViewedAt));
+
+    let total = 0;
+    const cumulative = songs.map(s => {
+        const newness = newScore.get(s.songId);
+        const leastPlayed = 1 - viewScore.get(s.songId); // least-recently viewed -> 1
+        total += Math.pow(newnessBoost, newness) * Math.pow(leastPlayedBoost, leastPlayed);
+        return total;
+    });
+
+    const target = Math.random() * total;
+    const idx = cumulative.findIndex(c => target < c);
+    return songs[idx === -1 ? songs.length - 1 : idx];
+};
+
+/**
  * Selects a random song from favorites.
  * Prefers songs with an interactive player, then avoids recent history,
- * degrading gracefully so a song is always returned when input is non-empty.
+ * then applies the user's newness / least-played weighting, degrading
+ * gracefully so a song is always returned when input is non-empty.
  * @param {Array<Object>} favoriteSongs - Array of favorite objects
  * @returns {Object|null} Selected favorite or null if none available
  */
@@ -471,7 +543,7 @@ const selectRandomSong = (favoriteSongs) => {
         logDebug(`Filtered ${pool.length - available.length} songs from history`);
     }
 
-    return songsToChooseFrom[Math.floor(Math.random() * songsToChooseFrom.length)];
+    return weightedPick(songsToChooseFrom);
 };
 
 /**
@@ -543,10 +615,11 @@ const playRandomSong = async (forceRefresh = false) => {
  */
 const initializeSettings = async () => {
     try {
-        const [shortcutResponse, debugResponse, instrumentResponse] = await Promise.all([
+        const [shortcutResponse, debugResponse, instrumentResponse, weightResponse] = await Promise.all([
             chrome.runtime.sendMessage({ action: 'getShortcutKey' }),
             chrome.runtime.sendMessage({ action: 'getDebugMode' }),
-            chrome.runtime.sendMessage({ action: 'getPreferredInstrument' })
+            chrome.runtime.sendMessage({ action: 'getPreferredInstrument' }),
+            chrome.runtime.sendMessage({ action: 'getWeightSettings' })
         ]);
 
         if (shortcutResponse && shortcutResponse.shortcutKey) {
@@ -562,6 +635,16 @@ const initializeSettings = async () => {
         if (instrumentResponse && instrumentResponse.preferredInstrument) {
             preferredInstrument = instrumentResponse.preferredInstrument;
             logDebug('Preferred instrument initialized:', preferredInstrument);
+        }
+
+        if (weightResponse) {
+            if (typeof weightResponse.newnessBoost === 'number') {
+                newnessBoost = weightResponse.newnessBoost;
+            }
+            if (typeof weightResponse.leastPlayedBoost === 'number') {
+                leastPlayedBoost = weightResponse.leastPlayedBoost;
+            }
+            logDebug('Weighting initialized: newness', newnessBoost, 'leastPlayed', leastPlayedBoost);
         }
     } catch (error) {
         console.error('Error initializing settings:', error);
@@ -588,6 +671,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (typeof message.settings.preferredInstrument !== 'undefined') {
             preferredInstrument = message.settings.preferredInstrument;
             logDebug('Preferred instrument updated to:', preferredInstrument);
+        }
+        if (typeof message.settings.newnessBoost !== 'undefined') {
+            newnessBoost = message.settings.newnessBoost;
+            logDebug('Newness boost updated to:', newnessBoost);
+        }
+        if (typeof message.settings.leastPlayedBoost !== 'undefined') {
+            leastPlayedBoost = message.settings.leastPlayedBoost;
+            logDebug('Least-played boost updated to:', leastPlayedBoost);
         }
     } else if (message.action === 'clearCacheAndHistory') {
         // Clear favorites cache and song history

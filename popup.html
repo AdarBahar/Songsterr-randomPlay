@@ -231,6 +231,47 @@
       text-align: center;
     }
 
+    .custom-weights {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .custom-weights.show {
+      display: block;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .slider-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .slider-label {
+      flex: 1;
+      font-size: 12px;
+      color: #bdc1c6;
+    }
+
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: #8ab4f8;
+      cursor: pointer;
+    }
+
+    .slider-value {
+      min-width: 28px;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 600;
+      color: #8ab4f8;
+      font-family: 'Courier New', monospace;
+    }
+
     .instrument-select {
       width: 100%;
       background: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%);
@@ -424,6 +465,33 @@
 
     <!-- Options Panel -->
     <div id="optionsPanel" class="options-panel">
+      <!-- Randomization -->
+      <div class="option-group">
+        <label class="option-label" for="weightPreset">Randomization</label>
+        <p class="option-description">Bias random picks toward newer or less-played favorites</p>
+        <select id="weightPreset" class="instrument-select">
+          <option value="off">Pure random</option>
+          <option value="new">Discover new</option>
+          <option value="forgotten">Revisit forgotten</option>
+          <option value="both">Fresh &amp; forgotten</option>
+          <option value="custom">Custom…</option>
+        </select>
+        <div id="customWeights" class="custom-weights">
+          <div class="slider-row">
+            <span class="slider-label">Favor newly added</span>
+            <input type="range" id="newnessSlider" min="1" max="10" step="1" value="1">
+            <span class="slider-value" id="newnessValue">1×</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">Favor least played</span>
+            <input type="range" id="leastPlayedSlider" min="1" max="10" step="1" value="1">
+            <span class="slider-value" id="leastPlayedValue">1×</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
       <!-- Keyboard Shortcut -->
       <div class="option-group">
         <label class="option-label">Keyboard Shortcut</label>
