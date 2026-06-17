@@ -1,6 +1,6 @@
 # Random Favorite Picker for Songsterr
 
-A Chrome extension that adds a random song picker functionality to Songsterr.com, allowing users to play a random song from their favorites list with enhanced performance and user experience.
+A Chrome extension that adds a random song picker to Songsterr.com. Play a random song from your favorites with one click, weight the randomness toward newly added or least-played songs, and jump straight to your preferred instrument's track.
 
 ## Features
 
@@ -9,6 +9,13 @@ A Chrome extension that adds a random song picker functionality to Songsterr.com
 - **Keyboard shortcut support** (default: "=" key, fully customizable)
 - **Smart UI integration** - Seamlessly adds a "Random" button to Songsterr's toolbar
 - **Debug mode** for troubleshooting
+
+### New in v1.5
+- **🎯 Preferred instrument** - Open the Guitar, Bass, or Drums track when a song has one (falls back to the default track)
+- **🎲 Weighted randomization** - Bias picks toward newly added and/or least-played favorites, via presets (Discover new / Revisit forgotten / Fresh & forgotten) or custom sliders
+- **🗂️ Full settings page** - Settings now open in a dedicated browser tab; the popup is a compact launcher
+- **🔌 JSON API** - Reads favorites from Songsterr's `/api/favorites` endpoint (more robust than HTML scraping, and the source of the new date-based features)
+- **🎨 Redesigned UI** - Modern zinc-dark theme with bundled fonts, segmented controls, and an animated equalizer mark
 
 ### Performance & UX (v1.3+)
 - **⚡ Lightning-fast caching** - Second click within 1 minute is instant (60-second cache)
@@ -19,7 +26,7 @@ A Chrome extension that adds a random song picker functionality to Songsterr.com
 ### Smart Features (v1.4+)
 - **🎲 No repeats** - Tracks last 10 songs to avoid playing the same song twice in a row
 - **⚡ Force refresh** - Press Shift+key to clear cache and history instantly
-- **🧹 Manual cache control** - Clear cache & history button in options panel
+- **🧹 Manual cache control** - Clear cache & history button on the Settings page
 - **🔍 Dynamic detection** - MutationObserver ensures button appears even on SPA navigation
 
 ### User Experience
@@ -56,16 +63,21 @@ The extension will be available for one-click installation once approved.
 - **`=` (or custom key)**: Play random song (uses cache, avoids recent repeats)
 - **`Shift + =`**: Force refresh - clears cache & history, fetches fresh favorites
 
-### First-Time Setup
-- Click the extension icon in Chrome toolbar
-- Customize keyboard shortcut if desired
-- Enable debug mode to see performance logs (optional)
+### Settings
+Click the extension icon, then **Open Settings** (or right-click the icon → Options) to open the full settings page in a tab. There you can:
+- **Randomization** - choose Pure random, Discover new, Revisit forgotten, Fresh & forgotten, or Custom (two sliders)
+- **Preferred Instrument** - Default / Guitar / Bass / Drums
+- **Keyboard Shortcut** - rebind the trigger key
+- **Debug Mode** - show detailed console logs
+- **Clear Cache & History** - force a fresh fetch
+
+Settings sync across devices via Chrome sync storage and apply live to open Songsterr tabs.
 
 ### Performance Tips
 - **Cache optimization**: Click Random multiple times within 1 minute to experience instant loading
 - **Variety**: Extension automatically avoids repeating the last 10 songs
 - **Force refresh**: Use Shift+key when you've added new favorites
-- **Manual control**: Use "Clear Cache & History" button in options panel
+- **Manual control**: Use the "Clear Cache & History" button on the Settings page
 - **Debug mode**: Enable to see cache hits/misses and performance metrics in console
 
 ## Development
@@ -131,32 +143,33 @@ npm run compile
 
 ### Build Output
 - **Directory**: `dist/`
-- **Contents**: All extension files (minified and optimized)
-- **Size**: ~50KB total
+- **Contents**: All extension files (minified and optimized), including bundled fonts
+- **Size**: ~110KB total (fonts account for ~52KB)
 
 ### Chrome Web Store Submission
 
-1. **Build the extension:**
+1. **Build and package** (produces `extension.zip` with files at the archive root):
    ```bash
-   npm run build
+   npm run compile
    ```
 
-2. **Create the ZIP file:**
-   ```bash
-   cd dist
-   zip -r ../RandomFavoritePicker.zip . -x '*.DS_Store'
-   cd ..
-   ```
-
-3. **Submit to Chrome Web Store:**
+2. **Submit to Chrome Web Store:**
    - Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-   - Upload `RandomFavoritePicker.zip`
+   - Upload `extension.zip`
    - Fill in store listing details
    - Submit for review
 
 See [deployment.md](.codeagent/current/deployment.md) for detailed deployment instructions.
 
 ## Version History
+
+### v1.5.0 (2026-06-17) - Instruments, Weighted Randomization & Redesign
+- 🔌 **JSON API migration** - Favorites now come from `/api/favorites` (structured data, more robust than HTML scraping)
+- 🎯 **Preferred instrument** - Open the Guitar/Bass/Drums track when available, else the default track
+- 🎲 **Weighted randomization** - Favor newly added (`addedAt`) and/or least-played (`lastViewedAt`) favorites; presets + custom sliders
+- 🗂️ **Full settings page** - Dedicated options tab; popup slimmed to a launcher
+- 🎨 **Redesigned UI** - Zinc-dark theme, bundled fonts, segmented controls, animated equalizer, version shown in footers
+- 🛠️ **Maintenance** - Consolidated build pipeline, hardened the toolbar MutationObserver, narrowed web-accessible resources to songsterr.com
 
 ### v1.4.1 (2026-01-06) - Chrome Web Store Submission ✅
 - 🎨 **Popup UI refinements** - Removed guitar icon, cleaner header
@@ -249,7 +262,7 @@ See [project_context.md](.codeagent/current/project_context.md) for detailed arc
 1. Enable debug mode
 2. Check console for "Using cached favorites" message
 3. Verify you're clicking within 60 seconds
-4. Try "Clear Cache & History" button in options panel
+4. Try the "Clear Cache & History" button on the Settings page
 
 ### Getting same song repeatedly?
 1. Extension tracks last 10 songs to avoid repeats
@@ -279,9 +292,15 @@ Contributions are welcome! Please:
 - ✅ Use MutationObserver for dynamic toolbar detection
 - ✅ Add cache clear button
 
-### Phase 4 (v2.0) - Major Features
+### ✅ Phase 4 (v1.5) - Instruments & Weighted Randomization - COMPLETE
+- ✅ Migrate favorites fetch to the JSON API
+- ✅ Preferred instrument (Guitar/Bass/Drums) track selection
+- ✅ Weighted randomization (newly added / least played)
+- ✅ Full-page settings + redesigned UI
+
+### Phase 5 (v2.0) - Major Features
 - Migrate to TypeScript
-- Add filters (artist, difficulty, instrument)
+- More filters (artist, difficulty)
 - Statistics dashboard
 - Playlist mode (queue multiple random songs)
 - Full test coverage
