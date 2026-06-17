@@ -25,9 +25,9 @@
       --surface-3: #27272c;
       --border: rgba(255, 255, 255, 0.07);
       --border-2: rgba(255, 255, 255, 0.13);
-      --text: #f4f4f5;
-      --text-dim: #a8a8b2;
-      --text-mute: #6e6e78;
+      --text: #f7f7f8;
+      --text-dim: #d4d4dc;
+      --text-mute: #9c9ca8;
       --accent: #4d8dff;
       --accent-2: #6aa0ff;
       --accent-press: #3a78ee;
@@ -159,6 +159,34 @@
       background: var(--accent);
       box-shadow: 0 0 7px var(--glow);
     }
+
+    /* Collapsible "Why it's cool?" */
+    button.card-title {
+      width: 100%;
+      font-family: inherit;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 0;
+      color: var(--text-mute);
+    }
+    button.card-title:hover { color: var(--text-dim); }
+    .card-title .chev {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-mute);
+      transition: transform 0.25s ease;
+    }
+    button.card-title.is-open .chev { transform: rotate(180deg); }
+
+    .about ul {
+      max-height: 0;
+      margin-top: 0;
+      overflow: hidden;
+      transition: max-height 0.32s ease, margin-top 0.32s ease;
+    }
+    .about ul.open { max-height: 240px; margin-top: 12px; }
 
     /* Hint */
     .hint {
@@ -309,10 +337,14 @@
     <!-- CTA -->
     <button id="openSettingsBtn" class="cta reveal"><span class="gear">⚙</span> Open Settings</button>
 
-    <!-- About -->
+    <!-- About (collapsible) -->
     <div class="card about reveal">
-      <div class="card-title"><span class="dot"></span> What it does</div>
-      <ul>
+      <button type="button" class="card-title" id="aboutToggle" aria-expanded="false" aria-controls="aboutList">
+        <span class="dot"></span>
+        <span>Why it's cool?</span>
+        <span class="chev" aria-hidden="true">▾</span>
+      </button>
+      <ul id="aboutList">
         <li>Plays a random song from your Songsterr favorites</li>
         <li>Can favor newly added or least-played songs</li>
         <li>Picks your preferred instrument track</li>

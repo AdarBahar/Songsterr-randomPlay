@@ -25,9 +25,9 @@
       --surface-3: #27272c;
       --border: rgba(255, 255, 255, 0.07);
       --border-2: rgba(255, 255, 255, 0.13);
-      --text: #f4f4f5;
-      --text-dim: #a8a8b2;
-      --text-mute: #6e6e78;
+      --text: #f7f7f8;
+      --text-dim: #d4d4dc;
+      --text-mute: #9c9ca8;
       --accent: #4d8dff;
       --accent-2: #6aa0ff;
       --accent-press: #3a78ee;
@@ -89,6 +89,19 @@
     .header .sub { font-size: 14px; color: var(--text-mute); }
     .header .sub b { color: var(--accent); font-weight: 600; }
 
+    /* Top hint note */
+    .hint {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: linear-gradient(180deg, rgba(77,141,255,0.10), rgba(77,141,255,0.04));
+      border: 1px solid rgba(77,141,255,0.22);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+    .hint .ic { font-size: 18px; line-height: 1.2; flex-shrink: 0; }
+
     /* Card */
     .card {
       background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
@@ -105,27 +118,6 @@
     }
     .label .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--glow); }
     .desc { font-size: 13.5px; color: var(--text-mute); margin: 0 0 16px; line-height: 1.45; }
-
-    /* Select */
-    .select {
-      width: 100%;
-      font-family: inherit;
-      font-size: 14.5px;
-      font-weight: 500;
-      color: var(--text);
-      background: var(--surface-3);
-      border: 1px solid var(--border-2);
-      border-radius: var(--radius-sm);
-      padding: 12px 40px 12px 14px;
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236aa0ff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .select:hover { border-color: var(--accent); }
-    .select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
 
     /* Sliders */
     .custom-weights { display: none; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
@@ -158,6 +150,8 @@
 
     /* Segmented control */
     .segmented { display: flex; gap: 4px; background: var(--surface-3); border-radius: var(--radius-sm); padding: 4px; }
+    .segmented.wrap { flex-wrap: wrap; }
+    .segmented.wrap .seg { flex: 1 1 30%; }
     .seg {
       flex: 1; font-family: inherit; font-size: 13.5px; font-weight: 600;
       color: var(--text-dim); background: transparent; border: none; border-radius: 7px;
@@ -182,14 +176,21 @@
       border-radius: 9px; box-shadow: 0 2px 0 rgba(0,0,0,0.4);
     }
     .btn {
-      font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--text);
-      background: var(--surface-3); border: 1px solid var(--border-2); border-radius: var(--radius-sm);
-      padding: 11px 20px; cursor: pointer; transition: all 0.15s ease;
+      font-family: inherit; font-size: 14px; font-weight: 700; color: var(--accent-2);
+      background: rgba(77, 141, 255, 0.12);
+      border: 1.5px solid var(--accent); border-radius: var(--radius-sm);
+      padding: 11px 22px; cursor: pointer; transition: all 0.15s ease;
     }
-    .btn:hover { border-color: var(--accent); background: #2f2f35; }
+    .btn:hover {
+      color: #0a1426;
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+      box-shadow: 0 3px 14px var(--glow);
+      transform: translateY(-1px);
+    }
     .btn.listening {
       color: #0a1426; background: linear-gradient(180deg, var(--accent-2), var(--accent));
-      border-color: transparent; animation: pulse 1.4s ease-in-out infinite;
+      border-color: transparent; box-shadow: 0 0 0 4px var(--glow);
+      animation: pulse 1.4s ease-in-out infinite;
     }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.72} }
 
@@ -251,17 +252,23 @@
       </div>
     </div>
 
+    <!-- Hint -->
+    <div class="hint reveal">
+      <span class="ic">💡</span>
+      <div>Make sure you're logged in to Songsterr and have favorites in your list.</div>
+    </div>
+
     <!-- Randomization -->
     <div class="card reveal">
       <div class="label"><span class="dot"></span> Randomization</div>
       <p class="desc">Bias random picks toward newer or less-played favorites. "Pure random" gives every favorite an equal chance.</p>
-      <select id="weightPreset" class="select">
-        <option value="off">Pure random</option>
-        <option value="new">Discover new</option>
-        <option value="forgotten">Revisit forgotten</option>
-        <option value="both">Fresh &amp; forgotten</option>
-        <option value="custom">Custom…</option>
-      </select>
+      <div class="segmented wrap" id="weightSeg" role="group" aria-label="Randomization">
+        <button type="button" class="seg" data-value="off">Pure random</button>
+        <button type="button" class="seg" data-value="new">Discover new</button>
+        <button type="button" class="seg" data-value="forgotten">Revisit forgotten</button>
+        <button type="button" class="seg" data-value="both">Fresh &amp; forgotten</button>
+        <button type="button" class="seg" data-value="custom">Custom…</button>
+      </div>
       <div id="customWeights" class="custom-weights">
         <div class="slider-row">
           <span class="slider-label">Favor newly added</span>

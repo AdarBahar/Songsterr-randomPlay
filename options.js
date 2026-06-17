@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appVersion: document.getElementById('appVersion'),
         clearCacheBtn: document.getElementById('clearCacheBtn'),
         instrumentSeg: document.getElementById('instrumentSeg'),
-        weightPreset: document.getElementById('weightPreset'),
+        weightSeg: document.getElementById('weightSeg'),
         customWeights: document.getElementById('customWeights'),
         newnessSlider: document.getElementById('newnessSlider'),
         leastPlayedSlider: document.getElementById('leastPlayedSlider'),
@@ -35,6 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
         segButtons.forEach(btn => btn.classList.toggle('is-active', btn.dataset.value === value));
     };
 
+    // Segmented randomization control
+    const weightSegButtons = Array.from(elements.weightSeg.querySelectorAll('.seg'));
+    const setActiveWeight = (mode) => {
+        weightSegButtons.forEach(btn => btn.classList.toggle('is-active', btn.dataset.value === mode));
+    };
+
     /**
      * Reflects the randomization settings in the UI (preset, sliders, labels).
      * @param {string} mode - Preset key or 'custom'
@@ -42,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {number} leastPlayedBoost
      */
     const applyWeightUI = (mode, newnessBoost, leastPlayedBoost) => {
-        elements.weightPreset.value = mode;
+        setActiveWeight(mode);
         elements.newnessSlider.value = newnessBoost;
         elements.leastPlayedSlider.value = leastPlayedBoost;
         elements.newnessValue.textContent = `${newnessBoost}×`;
@@ -125,19 +131,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Randomization preset handler
-    elements.weightPreset.addEventListener('change', () => {
-        const mode = elements.weightPreset.value;
-        if (mode === 'custom') {
-            const newnessBoost = Number(elements.newnessSlider.value);
-            const leastPlayedBoost = Number(elements.leastPlayedSlider.value);
-            applyWeightUI('custom', newnessBoost, leastPlayedBoost);
-            saveSettings({ weightMode: 'custom', newnessBoost, leastPlayedBoost });
-        } else {
-            const preset = WEIGHT_PRESETS[mode];
-            applyWeightUI(mode, preset.newnessBoost, preset.leastPlayedBoost);
-            saveSettings({ weightMode: mode, ...preset });
-        }
+    // Randomization preset handler (segmented control)
+    weightSegButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.value;
+            if (mode === 'custom') {
+                const newnessBoost = Number(elements.newnessSlider.value);
+                const leastPlayedBoost = Number(elements.leastPlayedSlider.value);
+                applyWeightUI('custom', newnessBoost, leastPlayedBoost);
+                saveSettings({ weightMode: 'custom', newnessBoost, leastPlayedBoost });
+            } else {
+                const preset = WEIGHT_PRESETS[mode];
+                applyWeightUI(mode, preset.newnessBoost, preset.leastPlayedBoost);
+                saveSettings({ weightMode: mode, ...preset });
+            }
+        });
     });
 
     // Custom slider handlers: live label update on input, persist on release
@@ -146,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.leastPlayedValue.textContent = `${elements.leastPlayedSlider.value}×`;
     };
     const saveSliderValues = () => {
-        elements.weightPreset.value = 'custom';
+        setActiveWeight('custom');
         elements.customWeights.classList.add('show');
         saveSettings({
             weightMode: 'custom',
