@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
         changeKeyBtn: document.getElementById('changeKeyBtn'),
         currentKey: document.getElementById('currentKey'),
         currentYear: document.getElementById('current-year'),
+        appVersion: document.getElementById('appVersion'),
         clearCacheBtn: document.getElementById('clearCacheBtn'),
-        preferredInstrument: document.getElementById('preferredInstrument'),
+        instrumentSeg: document.getElementById('instrumentSeg'),
         weightPreset: document.getElementById('weightPreset'),
         customWeights: document.getElementById('customWeights'),
         newnessSlider: document.getElementById('newnessSlider'),
@@ -26,6 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize UI
     elements.currentYear.textContent = new Date().getFullYear();
+    elements.appVersion.textContent = `v${chrome.runtime.getManifest().version}`;
+
+    // Segmented instrument control
+    const segButtons = Array.from(elements.instrumentSeg.querySelectorAll('.seg'));
+    const setActiveInstrument = (value) => {
+        segButtons.forEach(btn => btn.classList.toggle('is-active', btn.dataset.value === value));
+    };
 
     /**
      * Reflects the randomization settings in the UI (preset, sliders, labels).
@@ -49,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!chrome.runtime.lastError) {
                 elements.debugToggle.checked = data.debug || false;
                 elements.currentKey.textContent = data.shortcutKey || '=';
-                elements.preferredInstrument.value = data.preferredInstrument || 'default';
+                setActiveInstrument(data.preferredInstrument || 'default');
                 applyWeightUI(
                     data.weightMode || 'off',
                     data.newnessBoost || 1,
@@ -108,9 +116,13 @@ document.addEventListener('DOMContentLoaded', () => {
         saveSettings({ debug: elements.debugToggle.checked });
     });
 
-    // Preferred instrument handler
-    elements.preferredInstrument.addEventListener('change', () => {
-        saveSettings({ preferredInstrument: elements.preferredInstrument.value });
+    // Preferred instrument handler (segmented control)
+    segButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const value = btn.dataset.value;
+            setActiveInstrument(value);
+            saveSettings({ preferredInstrument: value });
+        });
     });
 
     // Randomization preset handler

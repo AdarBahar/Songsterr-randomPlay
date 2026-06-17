@@ -43,6 +43,8 @@ module.exports = {
         { from: "popup.html", to: "popup.html" },
         { from: "options.html", to: "options.html" },
         { from: "images", to: "images" },
+        { from: "fonts/HankenGrotesk.woff2", to: "fonts/HankenGrotesk.woff2" },
+        { from: "fonts/SpaceMono.woff2", to: "fonts/SpaceMono.woff2" },
         // Add any other static assets that need to be copied
       ],
     }),

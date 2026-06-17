@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const elements = {
         currentYear: document.getElementById('current-year'),
+        appVersion: document.getElementById('appVersion'),
         openSettingsBtn: document.getElementById('openSettingsBtn'),
         shortcutKeyDisplay: document.getElementById('shortcutKeyDisplay'),
         shortcutKeyDisplay2: document.getElementById('shortcutKeyDisplay2')
@@ -8,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize UI
     elements.currentYear.textContent = new Date().getFullYear();
+    elements.appVersion.textContent = `v${chrome.runtime.getManifest().version}`;
 
     // Show the current shortcut key in the read-only hints
     chrome.storage.sync.get('shortcutKey', (data) => {
