@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family:'Hanken Grotesk'; src:url('/fonts/HankenGrotesk.woff2') format('woff2'); font-weight:100 900; }
+  @font-face { font-family:'Space Mono'; src:url('/fonts/SpaceMono.woff2') format('woff2'); font-weight:400; }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { width:440px; height:280px; overflow:hidden; }
+  body {
+    font-family:'Hanken Grotesk', sans-serif;
+    background:#0d0d0f; color:#fafafa; position:relative;
+    -webkit-font-smoothing:antialiased;
+  }
+  .bg {
+    position:absolute; inset:0;
+    background:
+      radial-gradient(85% 75% at 18% -5%, rgba(77,141,255,0.30), transparent 60%),
+      radial-gradient(60% 65% at 105% 110%, rgba(240,73,74,0.14), transparent 55%);
+  }
+  .tex {
+    position:absolute; left:0; right:0; bottom:0; height:96px;
+    display:flex; align-items:flex-end; gap:5px; padding:0 22px; opacity:0.13;
+  }
+  .tex i { flex:1; background:linear-gradient(180deg,#6aa0ff,#4d8dff); border-radius:3px; }
+
+  .wrap { position:relative; z-index:2; height:100%; padding:32px 36px; display:flex; flex-direction:column; justify-content:center; }
+  .brand { display:flex; align-items:center; gap:11px; margin-bottom:16px; }
+  .eq { display:flex; align-items:flex-end; gap:4px; height:32px; width:32px; }
+  .eq i { flex:1; border-radius:3px; background:linear-gradient(180deg,#6aa0ff,#4d8dff); box-shadow:0 0 11px rgba(77,141,255,0.55); }
+  .eyebrow { font-size:12.5px; color:#c2c2cc; letter-spacing:1.6px; text-transform:uppercase; }
+  .eyebrow b { color:#6aa0ff; font-weight:700; }
+
+  h1 { font-size:31px; font-weight:800; letter-spacing:-0.9px; line-height:1.05; margin-bottom:11px; }
+  .tag { font-size:16.5px; color:#e9e9ee; }
+  .tag b { color:#6aa0ff; font-weight:700; }
+
+  .chips { display:flex; gap:7px; margin-top:18px; }
+  .chip {
+    font-family:'Space Mono', monospace; font-size:11px; color:#c2c2cc;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14);
+    border-radius:7px; padding:5px 9px;
+  }
+  .chip.on { color:#0a1426; background:linear-gradient(180deg,#6aa0ff,#4d8dff); border-color:transparent; font-weight:700; }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="tex" id="tex"></div>
+  <div class="wrap">
+    <div class="brand">
+      <div class="eq"><i style="height:55%"></i><i style="height:100%"></i><i style="height:40%"></i><i style="height:78%"></i></div>
+      <div class="eyebrow">for <b>Songsterr</b></div>
+    </div>
+    <h1>Random Favorite Picker</h1>
+    <div class="tag">Your favorites, <b>on shuffle.</b></div>
+    <div class="chips">
+      <span class="chip on">Drums</span>
+      <span class="chip">Guitar</span>
+      <span class="chip">Bass</span>
+      <span class="chip">Smart shuffle</span>
+    </div>
+  </div>
+  <script>
+    const tex = document.getElementById('tex');
+    const n = 34, h = [38,62,46,80,54,30,70,90,48,64,34,76,52,42,88,58,36,68,50,82,44,60,72,40,86,56,33,74,48,64,38,78,52,66];
+    for (let i = 0; i < n; i++) {
+      const b = document.createElement('i');
+      b.style.height = (h[i % h.length]) + '%';
+      tex.appendChild(b);
+    }
+  </script>
+</body>
+</html>

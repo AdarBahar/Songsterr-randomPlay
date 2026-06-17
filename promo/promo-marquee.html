@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family:'Hanken Grotesk'; src:url('/fonts/HankenGrotesk.woff2') format('woff2'); font-weight:100 900; }
+  @font-face { font-family:'Space Mono'; src:url('/fonts/SpaceMono.woff2') format('woff2'); font-weight:400; }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { width:1400px; height:560px; overflow:hidden; }
+  body {
+    font-family:'Hanken Grotesk', sans-serif;
+    background:#0d0d0f; color:#fafafa; position:relative;
+    -webkit-font-smoothing:antialiased;
+  }
+  .bg {
+    position:absolute; inset:0;
+    background:
+      radial-gradient(55% 90% at 12% -10%, rgba(77,141,255,0.26), transparent 60%),
+      radial-gradient(45% 80% at 95% 115%, rgba(240,73,74,0.12), transparent 55%);
+  }
+  .tex {
+    position:absolute; left:0; right:0; bottom:0; height:150px;
+    display:flex; align-items:flex-end; gap:7px; padding:0 40px; opacity:0.10;
+  }
+  .tex i { flex:1; background:linear-gradient(180deg,#6aa0ff,#4d8dff); border-radius:4px; }
+
+  .stage { position:relative; z-index:2; height:100%; display:flex; }
+  .left { flex:1.22; padding:72px 24px 72px 84px; display:flex; flex-direction:column; justify-content:center; }
+  .right { flex:1; display:flex; align-items:center; justify-content:center; }
+
+  .brand { display:flex; align-items:center; gap:14px; margin-bottom:26px; }
+  .eq { display:flex; align-items:flex-end; gap:6px; height:46px; width:46px; }
+  .eq i { flex:1; border-radius:4px; background:linear-gradient(180deg,#6aa0ff,#4d8dff); box-shadow:0 0 16px rgba(77,141,255,0.55); }
+  .eyebrow { font-size:17px; color:#c2c2cc; letter-spacing:2px; text-transform:uppercase; font-weight:600; }
+  .eyebrow b { color:#6aa0ff; font-weight:700; }
+
+  h1 { font-size:62px; font-weight:800; letter-spacing:-2px; line-height:1.04; margin-bottom:22px; }
+  h1 b { color:#6aa0ff; }
+  .tag { font-size:23px; color:#e9e9ee; line-height:1.5; max-width:600px; }
+
+  .feats { display:flex; gap:10px; margin-top:34px; flex-wrap:wrap; }
+  .feat {
+    font-size:15px; font-weight:600; color:#e9e9ee;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.13);
+    border-radius:999px; padding:9px 16px; display:flex; align-items:center; gap:8px;
+  }
+  .feat .d { width:7px; height:7px; border-radius:50%; background:#4d8dff; box-shadow:0 0 8px rgba(77,141,255,0.6); }
+
+  /* Floating UI mock */
+  .card {
+    width:392px; background:linear-gradient(180deg,#1e1e22,#161619);
+    border:1px solid rgba(255,255,255,0.09); border-radius:22px; padding:26px 26px 28px;
+    box-shadow:0 40px 90px rgba(0,0,0,0.6), 0 0 0 1px rgba(77,141,255,0.06);
+    transform:rotate(-2.5deg);
+  }
+  .card .lab { display:flex; align-items:center; gap:9px; font-size:16px; font-weight:700; margin-bottom:14px; }
+  .card .lab .d { width:7px; height:7px; border-radius:50%; background:#4d8dff; box-shadow:0 0 8px rgba(77,141,255,0.6); }
+  .seg { display:flex; gap:5px; background:#27272c; border-radius:11px; padding:5px; }
+  .seg button {
+    flex:1; font-family:inherit; font-size:14px; font-weight:600; color:#e9e9ee;
+    background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.13);
+    border-radius:8px; padding:11px 4px;
+  }
+  .seg button.on { color:#0a1426; background:linear-gradient(180deg,#6aa0ff,#4d8dff); border-color:transparent; box-shadow:0 2px 12px rgba(77,141,255,0.4); }
+  .divider { height:1px; background:rgba(255,255,255,0.08); margin:22px 0; }
+  .play { display:flex; align-items:center; justify-content:space-between; }
+  .play .t { font-size:15px; color:#c2c2cc; }
+  .keycap {
+    font-family:'Space Mono', monospace; font-size:18px; color:#fafafa;
+    background:linear-gradient(180deg,#27272c,#1a1a1e); border:1px solid rgba(255,255,255,0.13);
+    border-bottom-width:3px; border-radius:9px; padding:8px 18px; box-shadow:0 2px 0 rgba(0,0,0,0.4);
+  }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="tex" id="tex"></div>
+  <div class="stage">
+    <div class="left">
+      <div class="brand">
+        <div class="eq"><i style="height:52%"></i><i style="height:100%"></i><i style="height:38%"></i><i style="height:76%"></i></div>
+        <div class="eyebrow">Random Favorite Picker &nbsp;·&nbsp; for <b>Songsterr</b></div>
+      </div>
+      <h1>Your favorites,<br><b>on shuffle.</b></h1>
+      <div class="tag">Play a random tab in one click. Jump straight to your instrument's track, and favor newly added or least-played songs.</div>
+      <div class="feats">
+        <span class="feat"><span class="d"></span> Instrument tracks</span>
+        <span class="feat"><span class="d"></span> Smart randomization</span>
+        <span class="feat"><span class="d"></span> Keyboard shortcut</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="card">
+        <div class="lab"><span class="d"></span> Preferred Instrument</div>
+        <div class="seg">
+          <button>Default</button>
+          <button>Guitar</button>
+          <button>Bass</button>
+          <button class="on">Drums</button>
+        </div>
+        <div class="divider"></div>
+        <div class="play">
+          <span class="t">Play random song</span>
+          <span class="keycap">=</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tex = document.getElementById('tex');
+    const n = 70;
+    const h = [40,64,48,82,56,32,72,92,50,66,36,78,54,44,90,60,38,70,52,84,46,62,74,42,88,58,34,76,50,66,40,80,54,68];
+    for (let i = 0; i < n; i++) {
+      const b = document.createElement('i');
+      b.style.height = (h[i % h.length]) + '%';
+      tex.appendChild(b);
+    }
+  </script>
+</body>
+</html>

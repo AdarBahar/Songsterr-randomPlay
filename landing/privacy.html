@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Random Favorite Picker for Songsterr</title>
+<meta name="description" content="Privacy policy for the Random Favorite Picker Chrome extension for Songsterr.">
+<link rel="icon" type="image/png" href="assets/img/icon128.png">
+<style>
+  @font-face { font-family:'Hanken Grotesk'; src:url('assets/fonts/HankenGrotesk.woff2') format('woff2'); font-weight:100 900; font-display:swap; }
+  @font-face { font-family:'Space Mono'; src:url('assets/fonts/SpaceMono.woff2') format('woff2'); font-weight:400; font-display:swap; }
+
+  :root {
+    --bg:#0d0d0f; --s1:#161619; --s2:#1e1e22; --border:rgba(255,255,255,0.08);
+    --text:#fafafa; --dim:#e3e3e9; --mute:#a7a7b4; --accent:#4d8dff; --accent2:#6aa0ff; --glow:rgba(77,141,255,0.35);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.65; -webkit-font-smoothing:antialiased;
+    padding:48px 20px 80px; position:relative;
+  }
+  body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:radial-gradient(60% 40% at 50% -8%, rgba(77,141,255,0.16), transparent 60%); }
+  .wrap { max-width:760px; margin:0 auto; }
+
+  .top { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+  .eq { display:inline-flex; align-items:flex-end; gap:3px; height:26px; width:26px; }
+  .eq i { flex:1; border-radius:2px; background:linear-gradient(180deg,var(--accent2),var(--accent)); box-shadow:0 0 8px var(--glow); }
+  .top a { color:var(--mute); font-weight:600; font-size:14px; text-decoration:none; margin-left:auto; }
+  .top a:hover { color:var(--accent); }
+
+  header.title { border-bottom:1px solid var(--border); padding-bottom:22px; margin-bottom:28px; }
+  h1 { font-size:36px; font-weight:800; letter-spacing:-1px; }
+  .updated { color:var(--mute); font-size:14px; margin-top:6px; font-family:'Space Mono',monospace; }
+
+  .card { background:linear-gradient(180deg,var(--s2),var(--s1)); border:1px solid var(--border);
+    border-radius:14px; padding:22px 26px; margin-bottom:16px; }
+  h2 { font-size:19px; font-weight:700; color:var(--accent2); margin-bottom:10px; }
+  p { color:var(--dim); margin-bottom:12px; }
+  p:last-child { margin-bottom:0; }
+  ul { margin:6px 0 12px; padding-left:22px; color:var(--dim); }
+  li { margin-bottom:6px; }
+  strong { color:#fff; font-weight:600; }
+  a { color:var(--accent2); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  code { font-family:'Space Mono',monospace; font-size:13px; background:rgba(255,255,255,0.06);
+    border:1px solid var(--border); border-radius:5px; padding:1px 6px; color:var(--text); }
+
+  .foot { text-align:center; color:var(--mute); font-size:13px; margin-top:30px; }
+  .foot a { color:var(--mute); }
+  .foot a:hover { color:var(--accent); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <span class="eq"><i style="height:55%"></i><i style="height:100%"></i><i style="height:40%"></i><i style="height:78%"></i></span>
+      <strong>Random Favorite Picker</strong>
+      <a href="index.html">← Back to site</a>
+    </div>
+
+    <header class="title">
+      <h1>Privacy Policy</h1>
+      <div class="updated">Last updated: June 17, 2026</div>
+    </header>
+
+    <div class="card">
+      <h2>Summary</h2>
+      <p>Random Favorite Picker for Songsterr does <strong>not collect, sell, or transmit any personal information</strong>. There are no analytics, trackers, or third-party services. The extension runs entirely in your browser and only interacts with Songsterr while you use it.</p>
+    </div>
+
+    <div class="card">
+      <h2>What the extension stores</h2>
+      <p>Your preferences are saved with Chrome's built-in storage and, if you use Chrome Sync, synced across your own devices. Nothing is sent to us or anyone else. These settings are:</p>
+      <ul>
+        <li>Your preferred keyboard shortcut key</li>
+        <li>Your preferred instrument (Default, Guitar, Bass, or Drums)</li>
+        <li>Your randomization settings (mode and the newness / least-played weights)</li>
+        <li>Debug mode (enabled or disabled)</li>
+      </ul>
+      <p>The extension also keeps a short, in-memory list of the last few songs you played (to avoid repeats). This is never saved to disk and is cleared when the page is closed.</p>
+    </div>
+
+    <div class="card">
+      <h2>How your favorites are used</h2>
+      <p>To pick a random song, the extension reads your favorites list from Songsterr's own API (<code>/api/favorites</code>) using your existing Songsterr login, from within your browser. This data is used only to choose a song to open — it is <strong>never stored long-term, copied, or transmitted to any third party</strong>.</p>
+    </div>
+
+    <div class="card">
+      <h2>Permissions</h2>
+      <p>The extension requests minimal permissions:</p>
+      <ul>
+        <li><strong>storage</strong> — to save the preferences listed above.</li>
+      </ul>
+      <p>Its content script runs only on <code>songsterr.com</code> pages, where it adds the Random button and reads your favorites. No host permissions for other sites are requested.</p>
+    </div>
+
+    <div class="card">
+      <h2>Third-party services</h2>
+      <p>None. The extension does not use analytics, advertising, or any external services. Fonts and assets are bundled with the extension.</p>
+    </div>
+
+    <div class="card">
+      <h2>Contact</h2>
+      <p>Questions about this policy? Email <a href="mailto:adar@bahar.co.il">adar@bahar.co.il</a> or open an issue on <a href="https://github.com/AdarBahar/Songsterr-randomPlay/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+    </div>
+
+    <div class="foot">&copy; <span id="year"></span> Adar Bahar ·
+      <a href="https://github.com/AdarBahar/Songsterr-randomPlay" target="_blank" rel="noopener">GitHub</a> ·
+      <a href="index.html">Home</a>
+    </div>
+  </div>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
