@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
         optionsBtn: document.getElementById('optionsBtn'),
         optionsPanel: document.getElementById('optionsPanel'),
         currentYear: document.getElementById('current-year'),
-        clearCacheBtn: document.getElementById('clearCacheBtn')
+        clearCacheBtn: document.getElementById('clearCacheBtn'),
+        preferredInstrument: document.getElementById('preferredInstrument')
     };
 
     let isListening = false;
@@ -29,13 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Load saved settings
-    chrome.storage.sync.get(['debug', 'shortcutKey'], (data) => {
+    chrome.storage.sync.get(['debug', 'shortcutKey', 'preferredInstrument'], (data) => {
         if (!chrome.runtime.lastError) {
             elements.debugToggle.checked = data.debug || false;
             const key = data.shortcutKey || '=';
             elements.currentKey.textContent = key;
             elements.shortcutKeyDisplay.textContent = key;
             elements.shortcutKeyDisplay2.textContent = key;
+            elements.preferredInstrument.value = data.preferredInstrument || 'default';
         }
     });
 
@@ -46,14 +48,19 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {boolean} [settings.debug] - Debug mode flag
      * @param {string} [settings.shortcutKey] - Keyboard shortcut key
      */
+    const VALID_INSTRUMENTS = ['default', 'guitar', 'bass', 'drums'];
+
     const saveSettings = (settings) => {
         // Get current settings first
-        chrome.storage.sync.get(['debug', 'shortcutKey'], (currentSettings) => {
+        chrome.storage.sync.get(['debug', 'shortcutKey', 'preferredInstrument'], (currentSettings) => {
             const sanitizedSettings = {
                 debug: 'debug' in settings ? Boolean(settings.debug) : currentSettings.debug,
                 shortcutKey: 'shortcutKey' in settings
                     ? settings.shortcutKey.slice(0, 20)
-                    : (currentSettings.shortcutKey || '=')
+                    : (currentSettings.shortcutKey || '='),
+                preferredInstrument: 'preferredInstrument' in settings
+                    ? (VALID_INSTRUMENTS.includes(settings.preferredInstrument) ? settings.preferredInstrument : 'default')
+                    : (currentSettings.preferredInstrument || 'default')
             };
 
             // Save to storage - this will trigger the storage.onChanged event
@@ -71,6 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Debug toggle handler
     elements.debugToggle.addEventListener('change', () => {
         saveSettings({ debug: elements.debugToggle.checked });
+    });
+
+    // Preferred instrument handler
+    elements.preferredInstrument.addEventListener('change', () => {
+        saveSettings({ preferredInstrument: elements.preferredInstrument.value });
     });
 
     // Shortcut key handler with validation

@@ -32,6 +32,20 @@ const NOTIFICATION_GAP_PX = 10;
 /** Default keyboard shortcut */
 const DEFAULT_SHORTCUT_KEY = '=';
 
+/** Default preferred instrument ('default' = use the song's default track) */
+const DEFAULT_PREFERRED_INSTRUMENT = 'default';
+
+/**
+ * Maps a preferred-instrument setting to the favorite field holding the
+ * popular track index for that instrument. 'default' is intentionally absent.
+ * @type {Object<string, string>}
+ */
+const INSTRUMENT_TRACK_FIELD = {
+    guitar: 'popularTrackGuitar',
+    bass: 'popularTrackBass',
+    drums: 'popularTrackDrum'
+};
+
 /** Maximum song history size (to avoid repeats) */
 const MAX_SONG_HISTORY = 10;
 
@@ -64,6 +78,9 @@ let isDebugMode = false;
 
 /** @type {string} Current keyboard shortcut key */
 let currentShortcutKey = DEFAULT_SHORTCUT_KEY;
+
+/** @type {string} Preferred instrument: 'default', 'guitar', 'bass', or 'drums' */
+let preferredInstrument = DEFAULT_PREFERRED_INSTRUMENT;
 
 /**
  * Cache for favorites to reduce API calls
@@ -335,12 +352,21 @@ const slugify = (text) =>
 
 /**
  * Builds the canonical Songsterr tab URL for a favorite.
- * No track suffix is added so Songsterr opens the song's default track.
- * @param {Object} fav - Favorite object from the API ({ songId, artist, title })
+ * When a preferred instrument is set and the song has a track for it, appends
+ * the track selector (e.g. `t0`); otherwise opens the song's default track.
+ * @param {Object} fav - Favorite object from the API
  * @returns {string} Absolute tab URL on www.songsterr.com
  */
-const buildSongUrl = (fav) =>
-    `${SONG_BASE_URL}${slugify(`${fav.artist} ${fav.title}`)}-tab-s${fav.songId}`;
+const buildSongUrl = (fav) => {
+    const base = `${SONG_BASE_URL}${slugify(`${fav.artist} ${fav.title}`)}-tab-s${fav.songId}`;
+
+    const trackField = INSTRUMENT_TRACK_FIELD[preferredInstrument];
+    const trackIndex = trackField ? fav[trackField] : null;
+
+    // Fall back to the default track if this song has no track for the
+    // preferred instrument (trackIndex is null/undefined).
+    return (trackIndex != null) ? `${base}t${trackIndex}` : base;
+};
 
 /**
  * Fetches favorites from the Songsterr JSON API with caching.
@@ -517,9 +543,10 @@ const playRandomSong = async (forceRefresh = false) => {
  */
 const initializeSettings = async () => {
     try {
-        const [shortcutResponse, debugResponse] = await Promise.all([
+        const [shortcutResponse, debugResponse, instrumentResponse] = await Promise.all([
             chrome.runtime.sendMessage({ action: 'getShortcutKey' }),
-            chrome.runtime.sendMessage({ action: 'getDebugMode' })
+            chrome.runtime.sendMessage({ action: 'getDebugMode' }),
+            chrome.runtime.sendMessage({ action: 'getPreferredInstrument' })
         ]);
 
         if (shortcutResponse && shortcutResponse.shortcutKey) {
@@ -530,6 +557,11 @@ const initializeSettings = async () => {
         if (debugResponse && typeof debugResponse.debug !== 'undefined') {
             isDebugMode = debugResponse.debug;
             logDebug('Debug mode initialized:', isDebugMode);
+        }
+
+        if (instrumentResponse && instrumentResponse.preferredInstrument) {
+            preferredInstrument = instrumentResponse.preferredInstrument;
+            logDebug('Preferred instrument initialized:', preferredInstrument);
         }
     } catch (error) {
         console.error('Error initializing settings:', error);
@@ -552,6 +584,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (typeof message.settings.debug !== 'undefined') {
             isDebugMode = message.settings.debug;
             logDebug('Debug mode updated to:', isDebugMode);
+        }
+        if (typeof message.settings.preferredInstrument !== 'undefined') {
+            preferredInstrument = message.settings.preferredInstrument;
+            logDebug('Preferred instrument updated to:', preferredInstrument);
         }
     } else if (message.action === 'clearCacheAndHistory') {
         // Clear favorites cache and song history

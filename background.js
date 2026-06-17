@@ -35,6 +35,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Required for async response
     }
 
+    if (message.action === 'getPreferredInstrument') {
+        chrome.storage.sync.get('preferredInstrument', (data) => {
+            sendResponse({ preferredInstrument: data.preferredInstrument || 'default' });
+        });
+        return true; // Required for async response
+    }
+
     // Don't return true for unhandled messages
 });
 
@@ -51,6 +58,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         }
         if (changes.debug) {
             settingsChanged.debug = changes.debug.newValue;
+        }
+        if (changes.preferredInstrument) {
+            settingsChanged.preferredInstrument = changes.preferredInstrument.newValue;
         }
 
         // Only broadcast if there are changes

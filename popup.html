@@ -231,6 +231,28 @@
       text-align: center;
     }
 
+    .instrument-select {
+      width: 100%;
+      background: linear-gradient(180deg, #3c4043 0%, #2d2e30 100%);
+      border: 1px solid #5f6368;
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #e8eaed;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+
+    .instrument-select:hover {
+      border-color: #8ab4f8;
+    }
+
+    .instrument-select:focus {
+      outline: none;
+      border-color: #8ab4f8;
+    }
+
     .btn-secondary {
       background: #5f6368;
       border: none;
@@ -410,6 +432,20 @@
           <span class="key-display" id="currentKey">=</span>
           <button id="changeKeyBtn" class="btn-secondary">Change Key</button>
         </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Preferred Instrument -->
+      <div class="option-group">
+        <label class="option-label" for="preferredInstrument">Preferred Instrument</label>
+        <p class="option-description">Open this instrument's track when the song has one (otherwise the default track)</p>
+        <select id="preferredInstrument" class="instrument-select">
+          <option value="default">Default track</option>
+          <option value="guitar">Guitar</option>
+          <option value="bass">Bass</option>
+          <option value="drums">Drums</option>
+        </select>
       </div>
 
       <div class="divider"></div>
