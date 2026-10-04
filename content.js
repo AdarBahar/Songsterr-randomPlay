@@ -59,6 +59,24 @@ const OBSERVER_DEBOUNCE_MS = 200;
 /** Give up watching for the toolbar after this long in milliseconds */
 const OBSERVER_TIMEOUT_MS = 30000;
 
+/**
+ * sessionStorage keys. Every random play is a full page navigation, which
+ * reloads this script, so the cache and history must outlive in-memory state.
+ */
+const STORAGE_KEY_CACHE = 'randomSong:favoritesCache';
+const STORAGE_KEY_HISTORY = 'randomSong:songHistory';
+
+/**
+ * Shifted character for each unshifted symbol key (US layout), used to
+ * recognise Shift + shortcut, where e.key reports the shifted character.
+ * @type {Object<string, string>}
+ */
+const SHIFTED_KEYS = {
+    '`': '~', '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^',
+    '7': '&', '8': '*', '9': '(', '0': ')', '-': '_', '=': '+', '[': '{',
+    ']': '}', '\\': '|', ';': ':', "'": '"', ',': '<', '.': '>', '/': '?'
+};
+
 /** Songsterr JSON endpoint returning the user's favorites */
 const FAVORITES_API_URL = 'https://www.songsterr.com/api/favorites';
 
@@ -258,6 +276,21 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
 };
 
 /**
+ * Creates the random icon image element.
+ * Built with DOM APIs (no innerHTML) to keep store reviewers' linters happy.
+ * @param {number} size - Width/height attribute in pixels
+ * @returns {HTMLImageElement}
+ */
+const createRandomImage = (size) => {
+    const img = document.createElement('img');
+    img.src = chrome.runtime.getURL('images/random-48.png');
+    img.alt = 'Random';
+    img.width = size;
+    img.height = size;
+    return img;
+};
+
+/**
  * Creates the random song button for the Songsterr toolbar
  * Attempts to clone existing toolbar styling for consistency
  * @returns {HTMLElement|null} The created button element or null if creation fails
@@ -282,13 +315,15 @@ const createRandomButton = (templateButton = null) => {
                 // Replace SVG content
                 const svg = button.querySelector('svg');
                 if (svg) {
-                    svg.innerHTML = `
-                        <foreignObject width="40" height="40">
-                            <img src="${chrome.runtime.getURL('images/random-48.png')}"
-                                 alt="Random" width="40" height="40"
-                                 style="width: 100%; height: 100%; object-fit: contain;">
-                        </foreignObject>
-                    `;
+                    const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+                    foreignObject.setAttribute('width', '40');
+                    foreignObject.setAttribute('height', '40');
+
+                    const img = createRandomImage(40);
+                    img.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
+                    foreignObject.appendChild(img);
+
+                    svg.replaceChildren(foreignObject);
                 }
 
                 // Update text (find any text-containing div)
@@ -322,16 +357,21 @@ const createRandomButton = (templateButton = null) => {
     }
 
     // Create flexible structure that adapts to different layouts
-    button.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; min-height: 60px;">
-            <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
-                <img src="${chrome.runtime.getURL('images/random-48.png')}"
-                     alt="Random" width="32" height="32"
-                     style="display: block; opacity: 0.8; transition: opacity 0.2s;">
-            </div>
-            <div style="font-size: 12px; margin-top: 4px; text-align: center; opacity: 0.9;">Random</div>
-        </div>
-    `;
+    const container = document.createElement('div');
+    container.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; min-height: 60px;';
+
+    const iconBox = document.createElement('div');
+    iconBox.style.cssText = 'display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;';
+    const fallbackImg = createRandomImage(32);
+    fallbackImg.style.cssText = 'display: block; opacity: 0.8; transition: opacity 0.2s;';
+    iconBox.appendChild(fallbackImg);
+
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size: 12px; margin-top: 4px; text-align: center; opacity: 0.9;';
+    label.textContent = 'Random';
+
+    container.append(iconBox, label);
+    button.appendChild(container);
 
     // Add hover effects
     button.addEventListener('mouseenter', () => {
@@ -379,6 +419,50 @@ const buildSongUrl = (fav) => {
 };
 
 /**
+ * Reads a JSON value from sessionStorage (per tab, survives navigations).
+ * @param {string} key
+ * @returns {any|null} Parsed value, or null if missing/unreadable
+ */
+const readSession = (key) => {
+    try {
+        return JSON.parse(sessionStorage.getItem(key));
+    } catch (error) {
+        return null;
+    }
+};
+
+/**
+ * Writes a JSON value to sessionStorage. Failures (storage blocked or full)
+ * are non-fatal: the in-memory copy still serves the current page.
+ * @param {string} key
+ * @param {any} value
+ */
+const writeSession = (key, value) => {
+    try {
+        sessionStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        logDebug('Could not persist', key, error);
+    }
+};
+
+/**
+ * Restores the favorites cache and song history saved by a previous page
+ * in this tab.
+ */
+const restoreSessionState = () => {
+    const cache = readSession(STORAGE_KEY_CACHE);
+    if (cache && Array.isArray(cache.data) && typeof cache.timestamp === 'number') {
+        favoritesCache.data = cache.data;
+        favoritesCache.timestamp = cache.timestamp;
+    }
+
+    const history = readSession(STORAGE_KEY_HISTORY);
+    if (Array.isArray(history)) {
+        songHistory = history.slice(-MAX_SONG_HISTORY);
+    }
+};
+
+/**
  * Fetches favorites from the Songsterr JSON API with caching.
  * Drops broken ("junk") entries and anything without a usable songId.
  * @returns {Promise<Array<Object>>} Array of favorite objects
@@ -419,6 +503,7 @@ const fetchFavorites = async () => {
     // Update cache
     favoritesCache.data = favoriteSongs;
     favoritesCache.timestamp = now;
+    writeSession(STORAGE_KEY_CACHE, { data: favoriteSongs, timestamp: now });
     logDebug('Cached', favoriteSongs.length, 'favorites', `(filtered ${allFavorites.length - favoriteSongs.length} junk)`);
 
     return favoriteSongs;
@@ -432,6 +517,12 @@ const resetCacheAndHistory = () => {
     favoritesCache.data = null;
     favoritesCache.timestamp = 0;
     songHistory = [];
+    try {
+        sessionStorage.removeItem(STORAGE_KEY_CACHE);
+        sessionStorage.removeItem(STORAGE_KEY_HISTORY);
+    } catch (error) {
+        logDebug('Could not clear persisted cache/history:', error);
+    }
 };
 
 /**
@@ -444,6 +535,7 @@ const addToSongHistory = (songId) => {
     if (songHistory.length > MAX_SONG_HISTORY) {
         songHistory.shift(); // Remove oldest entry
     }
+    writeSession(STORAGE_KEY_HISTORY, songHistory);
     logDebug('Song history updated:', songHistory.length, 'songs');
 };
 
@@ -471,7 +563,8 @@ const toTime = (value) => {
 
 /**
  * Assigns each song a rank score in [0,1] by ascending `valueFn`, where the
- * highest value gets 1 and the lowest gets 0. Ties resolve by sort position.
+ * highest value gets 1 and the lowest gets 0. Tied values share the average
+ * of their positions, so list order never favors one of them.
  * @param {Array<Object>} songs
  * @param {(song: Object) => number} valueFn
  * @returns {Map<number|string, number>} songId -> score
@@ -482,8 +575,23 @@ const rankScores = (songs, valueFn) => {
         songs.forEach(s => scores.set(s.songId, 0));
         return scores;
     }
-    const sorted = [...songs].sort((a, b) => valueFn(a) - valueFn(b));
-    sorted.forEach((s, i) => scores.set(s.songId, i / (sorted.length - 1)));
+    const sorted = songs
+        .map(song => ({ song, value: valueFn(song) }))
+        .sort((a, b) => a.value - b.value);
+
+    let start = 0;
+    while (start < sorted.length) {
+        // [start, end] spans a run of equal values
+        let end = start;
+        while (end + 1 < sorted.length && sorted[end + 1].value === sorted[start].value) {
+            end++;
+        }
+        const score = ((start + end) / 2) / (sorted.length - 1);
+        for (let i = start; i <= end; i++) {
+            scores.set(sorted[i].song.songId, score);
+        }
+        start = end + 1;
+    }
     return scores;
 };
 
@@ -532,13 +640,20 @@ const selectRandomSong = (favoriteSongs) => {
 
     // Avoid recently played songs when possible
     const available = pool.filter(song => !isInRecentHistory(song.songId));
-    const songsToChooseFrom = available.length > 0 ? available : pool;
+    let songsToChooseFrom = available;
+    if (available.length === 0) {
+        // Every song is in history (small library): still never repeat the
+        // song that was just played when there is an alternative
+        const lastPlayed = songHistory[songHistory.length - 1];
+        const notLast = pool.filter(song => song.songId !== lastPlayed);
+        songsToChooseFrom = notLast.length > 0 ? notLast : pool;
+    }
 
     if (playable.length < favoriteSongs.length) {
         logDebug(`Excluded ${favoriteSongs.length - playable.length} songs without a player`);
     }
     if (available.length === 0 && pool.length > 0) {
-        logDebug('All songs in history, choosing from full pool');
+        logDebug('All songs in history, choosing from pool minus the last played');
     } else if (available.length < pool.length) {
         logDebug(`Filtered ${pool.length - available.length} songs from history`);
     }
@@ -835,33 +950,31 @@ const injectRandomButton = (toolbar) => {
 };
 
 /**
- * Sets up a MutationObserver to watch for toolbar appearance
- * Useful for SPAs where the toolbar may load after initial page load
+ * Sets up a MutationObserver that keeps the random button in the toolbar.
+ * Songsterr is an SPA: the toolbar may appear after initial load, and a
+ * re-render can drop the injected button, so this keeps watching and
+ * re-injects whenever the button is missing.
+ * @param {boolean} hasInjected - Whether the button is already in place
  * @returns {MutationObserver} The observer instance
  */
-const setupToolbarObserver = () => {
-    let hasInjected = false;
+const setupToolbarObserver = (hasInjected = false) => {
     let debounceTimer = null;
     let giveUpTimer = null;
 
-    const stop = () => {
-        if (debounceTimer) clearTimeout(debounceTimer);
-        if (giveUpTimer) clearTimeout(giveUpTimer);
-        observer.disconnect();
-    };
-
     const observer = new MutationObserver(() => {
-        if (hasInjected || debounceTimer) return;
+        if (debounceTimer) return;
 
-        // Debounce: coalesce bursts of SPA mutations into a single toolbar
-        // check instead of running findToolbar() on every mutation.
+        // Debounce: coalesce bursts of SPA mutations into a single check
+        // instead of running on every mutation.
         debounceTimer = setTimeout(() => {
             debounceTimer = null;
+            if (document.getElementById('random-icon')) return;
+
             const toolbar = findToolbar();
             if (toolbar && injectRandomButton(toolbar)) {
                 hasInjected = true;
-                stop();
-                logDebug('Toolbar observer disconnected after successful injection');
+                if (giveUpTimer) clearTimeout(giveUpTimer);
+                logDebug('Random button (re)injected by toolbar observer');
             }
         }, OBSERVER_DEBOUNCE_MS);
     });
@@ -872,65 +985,98 @@ const setupToolbarObserver = () => {
         subtree: true
     });
 
-    // Stop watching after a while so we don't run findToolbar() for the entire
-    // page lifetime on heavy pages where the toolbar never matches a selector.
-    giveUpTimer = setTimeout(() => {
-        if (!hasInjected) {
-            stop();
-            logDebug('Toolbar observer gave up after timeout');
-        }
-    }, OBSERVER_TIMEOUT_MS);
+    // If the toolbar never shows up, stop watching so we don't run
+    // findToolbar() for the entire page lifetime on pages where no selector
+    // matches.
+    if (!hasInjected) {
+        giveUpTimer = setTimeout(() => {
+            if (!hasInjected) {
+                if (debounceTimer) clearTimeout(debounceTimer);
+                observer.disconnect();
+                logDebug('Toolbar observer gave up after timeout');
+            }
+        }, OBSERVER_TIMEOUT_MS);
+    }
 
     logDebug('Toolbar observer set up');
     return observer;
 };
 
-if (window.location.hostname.includes("songsterr.com")) {
-    window.addEventListener('load', async () => {
-        await initializeSettings();
+/**
+ * Checks whether a keydown matches the configured shortcut key.
+ * With Shift held, e.key is the shifted character ('+' for '=', 'A' for 'a'),
+ * so compare against the shifted form of the shortcut as well.
+ * @param {KeyboardEvent} e
+ * @returns {boolean}
+ */
+const matchesShortcutKey = (e) => {
+    if (e.key === currentShortcutKey) return true;
+    if (!e.shiftKey) return false;
+    return e.key === SHIFTED_KEYS[currentShortcutKey] ||
+        e.key.toLowerCase() === currentShortcutKey.toLowerCase();
+};
 
-        // Set up keyboard shortcut regardless of whether UI button can be added
-        document.addEventListener('keydown', (e) => {
-            // Don't trigger shortcut when user is typing in input fields
-            const activeElement = document.activeElement;
-            if (activeElement && (
-                activeElement.tagName === 'INPUT' ||
-                activeElement.tagName === 'TEXTAREA' ||
-                activeElement.isContentEditable
-            )) {
-                return;
-            }
+/**
+ * Entry point: loads settings, wires the keyboard shortcut and injects the button
+ * @async
+ * @returns {Promise<void>}
+ */
+const init = async () => {
+    await initializeSettings();
+    restoreSessionState();
 
-            // Check if the shortcut key is pressed
-            if (e.key === currentShortcutKey) {
-                // Shift + key = force refresh (clear cache and history)
-                if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
-                    e.preventDefault();
-                    logDebug('Shift + shortcut key pressed: force refresh');
-                    showNotification('Refreshing favorites and clearing history...', 'info', 1500);
-                    playRandomSong(true); // Force refresh
-                }
-                // Just the key (no modifiers) = normal random play
-                else if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
-                    e.preventDefault();
-                    logDebug('Shortcut key pressed:', currentShortcutKey);
-                    playRandomSong();
-                }
-                // Other modifier combinations are ignored to avoid conflicts
-            }
-        });
-
-        // Try to find and inject button into toolbar
-        const toolbar = findToolbar();
-        if (toolbar) {
-            injectRandomButton(toolbar);
-        } else {
-            // Toolbar not found immediately, set up observer to watch for it
-            logDebug('Toolbar not found on load, setting up observer');
-            setupToolbarObserver();
+    // Set up keyboard shortcut regardless of whether UI button can be added
+    document.addEventListener('keydown', (e) => {
+        // Don't trigger shortcut when user is typing in input fields
+        const activeElement = document.activeElement;
+        if (activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.isContentEditable
+        )) {
+            return;
         }
 
-        // Always log keyboard shortcut availability
-        logDebug('Keyboard shortcut available:', currentShortcutKey, '(Shift+key for force refresh)');
+        // Check if the shortcut key is pressed
+        if (matchesShortcutKey(e)) {
+            // Shift + key = force refresh (clear cache and history)
+            if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                e.preventDefault();
+                logDebug('Shift + shortcut key pressed: force refresh');
+                showNotification('Refreshing favorites and clearing history...', 'info', 1500);
+                playRandomSong(true); // Force refresh
+            }
+            // Just the key (no modifiers) = normal random play
+            else if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
+                e.preventDefault();
+                logDebug('Shortcut key pressed:', currentShortcutKey);
+                playRandomSong();
+            }
+            // Other modifier combinations are ignored to avoid conflicts
+        }
     });
+
+    // Try to find and inject button into toolbar
+    const toolbar = findToolbar();
+    const injected = toolbar ? injectRandomButton(toolbar) : false;
+    if (!injected) {
+        logDebug('Toolbar not found on load, watching for it');
+    }
+
+    // Keep watching: injects once the toolbar appears, and re-injects if an
+    // SPA re-render drops the button
+    setupToolbarObserver(injected);
+
+    // Always log keyboard shortcut availability
+    logDebug('Keyboard shortcut available:', currentShortcutKey, '(Shift+key for force refresh)');
+};
+
+if (window.location.hostname.includes("songsterr.com")) {
+    // Content scripts run at document_idle, which can land after the load
+    // event has already fired (always the case in Firefox), so don't rely on it.
+    if (document.readyState === 'complete') {
+        init();
+    } else {
+        window.addEventListener('load', init);
+    }
 }

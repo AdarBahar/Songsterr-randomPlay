@@ -4,7 +4,10 @@
   "scripts": {
     "build": "webpack --mode production",
     "zip": "cd dist && bestzip ../extension.zip *",
-    "compile": "npm run build && npm run zip"
+    "compile": "npm run build && npm run zip",
+    "build:firefox": "node scripts/build-firefox.js",
+    "zip:firefox": "cd dist-firefox && bestzip ../extension-firefox.zip *",
+    "compile:firefox": "npm run build:firefox && npm run zip:firefox"
   },
   "devDependencies": {
     "webpack": "^5.88.0",
