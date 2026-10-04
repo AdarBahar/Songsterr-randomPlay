@@ -4,7 +4,7 @@ Entries are added in reverse chronological order.
 
 ---
 
-## 2026-10-04: Firefox Support & Content-Script Fixes (unreleased)
+## 2026-10-04: Firefox Support & Content-Script Fixes (v1.6.0)
 **Branch**: main
 **Status**: Built and linted; not yet tested in Firefox or submitted to AMO
 
