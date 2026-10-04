@@ -22,7 +22,7 @@ Durable knowledge, decisions, patterns, "how we do things here", and gotchas.
 - Songsterr is a SPA - toolbar may load after initial page load
 - **Static approach**: 20+ fallback selectors tried on page load
 - **Dynamic approach**: MutationObserver watches for toolbar appearance
-- Observer auto-disconnects after successful injection (performance)
+- Observer keeps running after injection (debounced) so the button is restored if an SPA re-render drops it; it only disconnects if no toolbar is found within 30s
 - Keyboard shortcut always works as ultimate fallback
 
 ---
@@ -85,12 +85,13 @@ const selectRandomSong = (favorites) => {
 
 **Gotchas**:
 - History is per-tab (not shared across tabs)
-- History clears on page reload
+- History is persisted in `sessionStorage` (`randomSong:songHistory`). Every random play is a full page navigation that reloads the content script, so in-memory-only history was wiped on each play and never filtered anything (fixed Oct 2026)
+- History stores `songId`s (not URLs, as in the sketch above)
 - If favorites < MAX_SONG_HISTORY, some repeats are inevitable
 - Debug logs show filtering statistics
 
 ### Caching Strategy (v1.3+)
-**Pattern**: In-memory cache with TTL (Time To Live)
+**Pattern**: Cache with TTL (Time To Live), mirrored to `sessionStorage` (`randomSong:favoritesCache`) so it survives the page navigation each play triggers
 
 **Implementation**:
 ```javascript
@@ -192,38 +193,37 @@ const showNotification = (message, type, duration) => {
 
 **Use Case**: Shift+click shows two notifications (blue + orange), both visible and readable
 
-### MutationObserver Pattern (v1.4+)
-**Pattern**: Watch for DOM changes to inject UI dynamically
+### MutationObserver Pattern (v1.4+, persistent since Oct 2026)
+**Pattern**: Watch for DOM changes to inject UI dynamically, and keep it injected
 
 **Implementation**:
 ```javascript
-const setupToolbarObserver = () => {
-  let hasInjected = false;
-  const observer = new MutationObserver((mutations) => {
-    if (hasInjected) return;
-    const toolbar = findToolbar();
-    if (toolbar) {
-      injectRandomButton(toolbar);
-      hasInjected = true;
-      observer.disconnect();  // IMPORTANT: Stop observing
-    }
+const setupToolbarObserver = (hasInjected = false) => {
+  let debounceTimer = null;
+  const observer = new MutationObserver(() => {
+    if (debounceTimer) return;
+    debounceTimer = setTimeout(() => {
+      debounceTimer = null;
+      if (document.getElementById('random-icon')) return;  // still there
+      const toolbar = findToolbar();
+      if (toolbar && injectRandomButton(toolbar)) hasInjected = true;
+    }, OBSERVER_DEBOUNCE_MS);
   });
   observer.observe(document.body, { childList: true, subtree: true });
+  // Disconnects only if nothing was ever injected within OBSERVER_TIMEOUT_MS
   return observer;
 };
 ```
 
 **Benefits**:
 - Handles SPAs where content loads dynamically
-- More robust than static selectors alone
-- Automatically stops when done (performance)
+- Restores the button when Songsterr re-renders its toolbar
 - Works with Songsterr's client-side routing
 
 **Gotchas**:
-- MUST disconnect observer after injection (avoid memory leaks)
-- Use flag to prevent duplicate injections
+- Always started from `init()`, whether or not the first injection succeeded
+- Debounced (200ms) and the steady-state check is a single `getElementById`, so running for the page lifetime is cheap
 - Observe entire body with subtree:true for deep changes
-- Combine with static detection (try immediate, then observe)
 
 ### Button Creation Strategy
 1. **First try**: Clone existing toolbar button (best styling match)
@@ -295,6 +295,15 @@ const setupToolbarObserver = () => {
 - No need for `activeTab` or `tabs` permission
 - Content scripts automatically have access to page DOM
 - Web accessible resources needed for images used in content scripts
+
+### Cross-Browser Notes (Firefox, Oct 2026)
+- Firefox MV3 has no background service worker: `scripts/build-firefox.js` rewrites `background` to `{ scripts: ['background.js'] }` (event page)
+- `browser_specific_settings.gecko.id` is required for `storage.sync` and is permanent once published on AMO
+- The `chrome.*` namespace (with promises) works in Firefox MV3, so the source files are shared unchanged
+- Content scripts run at `document_idle`, which can be after `load` has fired; `init()` checks `document.readyState` instead of relying on the event
+- No `innerHTML` in `content.js` (AMO's linter flags it); the button is built with DOM APIs
+- The Firefox package is unminified, so AMO needs no source-code upload
+- Shift + shortcut: `e.key` is the shifted character, so matching uses a US-layout symbol map plus case-insensitive letters
 
 ### Build System
 - Keep console.logs in production for debug mode (`drop_console: false`)

@@ -110,6 +110,27 @@ npm run zip
 # Creates extension.zip in project root
 ```
 
+### Firefox Add-ons (AMO) Submission
+
+1. **Build and package**
+   ```bash
+   npm run compile:firefox
+   # Creates dist-firefox/ and extension-firefox.zip
+   ```
+   The Firefox package is the unminified source plus a patched manifest
+   (see `scripts/build-firefox.js`), so no source-code upload is needed.
+
+2. **Validate**
+   ```bash
+   npx web-ext lint --source-dir dist-firefox
+   ```
+
+3. **Test locally**: `about:debugging#/runtime/this-firefox` → "Load Temporary Add-on…" → `dist-firefox/manifest.json`
+
+4. **Upload** `extension-firefox.zip` at the [Add-on Developer Hub](https://addons.mozilla.org/developers/)
+
+Note: the add-on ID (`random-song-songsterr@bahar.co.il`) cannot change after the first AMO submission.
+
 ### Chrome Web Store Submission
 
 1. **Prepare Package**

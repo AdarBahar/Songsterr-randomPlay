@@ -27,7 +27,8 @@ A Chrome extension that adds a random song picker to Songsterr.com. Play a rando
 - **🎲 No repeats** - Tracks last 10 songs to avoid playing the same song twice in a row
 - **⚡ Force refresh** - Press Shift+key to clear cache and history instantly
 - **🧹 Manual cache control** - Clear cache & history button on the Settings page
-- **🔍 Dynamic detection** - MutationObserver ensures button appears even on SPA navigation
+- **🔍 Dynamic detection** - MutationObserver injects the button once the toolbar appears and re-adds it if Songsterr re-renders
+- **🦊 Chrome and Firefox** - Same code base, separate Firefox package (Firefox 140+)
 
 ### User Experience
 - **Dismissible notifications** - Color-coded feedback (loading, success, error)
@@ -38,9 +39,10 @@ A Chrome extension that adds a random song picker to Songsterr.com. Play a rando
 ## Installation
 
 ### From Chrome Web Store (Recommended)
-**Status**: ✅ Submitted on January 6, 2026 - Pending Chrome Web Store review
+Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/random-song-songsterr-ext/iieohhnmhcmnchcefjjlfdmobhmoaobe).
 
-The extension will be available for one-click installation once approved.
+### Firefox
+Not yet listed on addons.mozilla.org. Until it is, load it manually (see below).
 
 ### Manual Installation (Development)
 1. Download or clone this repository
@@ -50,6 +52,13 @@ The extension will be available for one-click installation once approved.
 5. Enable "Developer mode" (toggle in top-right)
 6. Click "Load unpacked" and select the `dist` directory
 7. The extension icon should appear in your Chrome toolbar
+
+### Firefox (Development)
+Requires Firefox 140 or newer.
+1. Run `npm run build:firefox` (no `npm install` needed for this step)
+2. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`
+3. Click "Load Temporary Add-on…" and select `dist-firefox/manifest.json`
+4. The add-on stays loaded until Firefox restarts
 
 ## Usage
 
@@ -61,7 +70,7 @@ The extension will be available for one-click installation once approved.
 
 ### Keyboard Shortcuts
 - **`=` (or custom key)**: Play random song (uses cache, avoids recent repeats)
-- **`Shift + =`**: Force refresh - clears cache & history, fetches fresh favorites
+- **`Shift + =`**: Force refresh - clears cache & history, fetches fresh favorites (Shift + symbol keys assume a US keyboard layout)
 
 ### Settings
 Click the extension icon, then **Open Settings** (or right-click the icon → Options) to open the full settings page in a tab. There you can:
@@ -159,9 +168,39 @@ npm run compile
    - Fill in store listing details
    - Submit for review
 
+### Firefox Add-ons (AMO) Submission
+
+The Firefox package is built by `scripts/build-firefox.js`. It ships the same
+source files unminified (so no separate source upload is needed for review) and
+patches `manifest.json` with the Firefox-only bits: an event-page background
+script instead of a service worker, and `browser_specific_settings.gecko`.
+
+1. **Build and package** (produces `extension-firefox.zip`):
+   ```bash
+   npm run compile:firefox
+   ```
+
+2. **Validate** (optional):
+   ```bash
+   npx web-ext lint --source-dir dist-firefox
+   ```
+
+3. **Submit to AMO:**
+   - Go to the [Add-on Developer Hub](https://addons.mozilla.org/developers/)
+   - Upload `extension-firefox.zip`
+   - Fill in listing details and submit for review
+
 See [deployment.md](.codeagent/current/deployment.md) for detailed deployment instructions.
 
 ## Version History
+
+### Unreleased - Firefox Support & Fixes
+- 🦊 **Firefox build** - `npm run compile:firefox` produces an AMO-ready package (event-page background, gecko add-on ID)
+- 🎲 **Repeat avoidance fixed** - Song history and the favorites cache now persist in `sessionStorage`; previously every play's page navigation wiped them
+- ⌨️ **Shift + shortcut fixed** - Force refresh now fires for symbol and letter keys (Shift + `=` reports as `+`)
+- 🔍 **Button re-injection** - The toolbar observer keeps running and restores the button after an SPA re-render
+- ⏱️ **Startup race fixed** - The content script no longer depends on the `load` event, which may already have fired
+- 🖼️ **Icons** - `icon16.png` is now a true 16px image; the old 32px file is `icon32.png`
 
 ### v1.5.0 (2026-06-17) - Instruments, Weighted Randomization & Redesign
 - 🔌 **JSON API migration** - Favorites now come from `/api/favorites` (structured data, more robust than HTML scraping)

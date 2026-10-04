@@ -203,6 +203,7 @@ mouseleave: img.style.opacity = '0.8'
 
 ### Extension Icons
 - `icon16.png` - 16x16px (toolbar, small)
+- `icon32.png` - 32x32px (toolbar, high-DPI)
 - `icon48.png` - 48x48px (extension management)
 - `icon128.png` - 128x128px (Chrome Web Store)
 

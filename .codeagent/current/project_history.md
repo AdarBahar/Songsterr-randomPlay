@@ -4,6 +4,32 @@ Entries are added in reverse chronological order.
 
 ---
 
+## 2026-10-04: Firefox Support & Content-Script Fixes (unreleased)
+**Branch**: main
+**Status**: Built and linted; not yet tested in Firefox or submitted to AMO
+
+**Firefox**:
+- Added `scripts/build-firefox.js` and `build:firefox` / `zip:firefox` / `compile:firefox` npm scripts
+- Output: `dist-firefox/` and `extension-firefox.zip` (unminified sources, patched manifest)
+- Manifest patch: event-page background, `browser_specific_settings.gecko` (id `random-song-songsterr@bahar.co.il`, min Firefox 140 / Android 142, no data collection)
+- `web-ext lint`: 0 errors, 0 warnings
+
+**Fixes (content.js)**:
+- Song history and favorites cache persisted in `sessionStorage`; they were wiped by the page navigation on every play, so repeat avoidance never worked
+- Shift + shortcut force refresh now matches the shifted character (`+` for `=`, `A` for `a`)
+- Toolbar observer stays active and re-injects the button after SPA re-renders
+- Startup no longer depends on the `load` event (may already have fired at `document_idle`)
+- Button built with DOM APIs instead of `innerHTML`
+
+**Assets**:
+- `images/icon16.png` was 32px wide; it is now a real 16px icon and the 32px file is `images/icon32.png` (both declared in the manifest)
+
+**Next Steps**:
+- Test in Firefox (toolbar icon, logged-in favorites fetch, settings sync)
+- Submit `extension-firefox.zip` to AMO, then add the listing link to README and the landing page
+
+---
+
 ## 2026-01-06: Chrome Web Store Submission (v1.4.1)
 **Branch**: main
 **Commits**: 29e03c2, 1b7a17b, cb8191a, 46db36c, 7a2cc6b, 6b8718e, ac5d6c2
