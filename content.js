@@ -563,7 +563,8 @@ const toTime = (value) => {
 
 /**
  * Assigns each song a rank score in [0,1] by ascending `valueFn`, where the
- * highest value gets 1 and the lowest gets 0. Ties resolve by sort position.
+ * highest value gets 1 and the lowest gets 0. Tied values share the average
+ * of their positions, so list order never favors one of them.
  * @param {Array<Object>} songs
  * @param {(song: Object) => number} valueFn
  * @returns {Map<number|string, number>} songId -> score
@@ -574,8 +575,23 @@ const rankScores = (songs, valueFn) => {
         songs.forEach(s => scores.set(s.songId, 0));
         return scores;
     }
-    const sorted = [...songs].sort((a, b) => valueFn(a) - valueFn(b));
-    sorted.forEach((s, i) => scores.set(s.songId, i / (sorted.length - 1)));
+    const sorted = songs
+        .map(song => ({ song, value: valueFn(song) }))
+        .sort((a, b) => a.value - b.value);
+
+    let start = 0;
+    while (start < sorted.length) {
+        // [start, end] spans a run of equal values
+        let end = start;
+        while (end + 1 < sorted.length && sorted[end + 1].value === sorted[start].value) {
+            end++;
+        }
+        const score = ((start + end) / 2) / (sorted.length - 1);
+        for (let i = start; i <= end; i++) {
+            scores.set(sorted[i].song.songId, score);
+        }
+        start = end + 1;
+    }
     return scores;
 };
 
@@ -624,13 +640,20 @@ const selectRandomSong = (favoriteSongs) => {
 
     // Avoid recently played songs when possible
     const available = pool.filter(song => !isInRecentHistory(song.songId));
-    const songsToChooseFrom = available.length > 0 ? available : pool;
+    let songsToChooseFrom = available;
+    if (available.length === 0) {
+        // Every song is in history (small library): still never repeat the
+        // song that was just played when there is an alternative
+        const lastPlayed = songHistory[songHistory.length - 1];
+        const notLast = pool.filter(song => song.songId !== lastPlayed);
+        songsToChooseFrom = notLast.length > 0 ? notLast : pool;
+    }
 
     if (playable.length < favoriteSongs.length) {
         logDebug(`Excluded ${favoriteSongs.length - playable.length} songs without a player`);
     }
     if (available.length === 0 && pool.length > 0) {
-        logDebug('All songs in history, choosing from full pool');
+        logDebug('All songs in history, choosing from pool minus the last played');
     } else if (available.length < pool.length) {
         logDebug(`Filtered ${pool.length - available.length} songs from history`);
     }

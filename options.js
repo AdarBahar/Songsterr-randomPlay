@@ -85,35 +85,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Validates and saves settings to Chrome storage.
+     * Writes only the fields passed in, so overlapping saves of different
+     * settings can't overwrite each other with stale values.
      * @param {Object} settings - Partial settings to update
      */
     const saveSettings = (settings) => {
-        const keys = ['debug', 'shortcutKey', 'preferredInstrument', 'weightMode', 'newnessBoost', 'leastPlayedBoost'];
-        chrome.storage.sync.get(keys, (currentSettings) => {
-            const sanitizedSettings = {
-                debug: 'debug' in settings ? Boolean(settings.debug) : currentSettings.debug,
-                shortcutKey: 'shortcutKey' in settings
-                    ? settings.shortcutKey.slice(0, 20)
-                    : (currentSettings.shortcutKey || '='),
-                preferredInstrument: 'preferredInstrument' in settings
-                    ? (VALID_INSTRUMENTS.includes(settings.preferredInstrument) ? settings.preferredInstrument : 'default')
-                    : (currentSettings.preferredInstrument || 'default'),
-                weightMode: 'weightMode' in settings
-                    ? (VALID_WEIGHT_MODES.includes(settings.weightMode) ? settings.weightMode : 'off')
-                    : (currentSettings.weightMode || 'off'),
-                newnessBoost: 'newnessBoost' in settings
-                    ? clampBoost(settings.newnessBoost, 1)
-                    : (currentSettings.newnessBoost || 1),
-                leastPlayedBoost: 'leastPlayedBoost' in settings
-                    ? clampBoost(settings.leastPlayedBoost, 1)
-                    : (currentSettings.leastPlayedBoost || 1)
-            };
+        const sanitizedSettings = {};
 
-            chrome.storage.sync.set(sanitizedSettings, () => {
-                if ('shortcutKey' in settings) {
-                    elements.currentKey.textContent = sanitizedSettings.shortcutKey;
-                }
-            });
+        if ('debug' in settings) {
+            sanitizedSettings.debug = Boolean(settings.debug);
+        }
+        if ('shortcutKey' in settings) {
+            sanitizedSettings.shortcutKey = settings.shortcutKey.slice(0, 20);
+        }
+        if ('preferredInstrument' in settings) {
+            sanitizedSettings.preferredInstrument = VALID_INSTRUMENTS.includes(settings.preferredInstrument)
+                ? settings.preferredInstrument
+                : 'default';
+        }
+        if ('weightMode' in settings) {
+            sanitizedSettings.weightMode = VALID_WEIGHT_MODES.includes(settings.weightMode)
+                ? settings.weightMode
+                : 'off';
+        }
+        if ('newnessBoost' in settings) {
+            sanitizedSettings.newnessBoost = clampBoost(settings.newnessBoost, 1);
+        }
+        if ('leastPlayedBoost' in settings) {
+            sanitizedSettings.leastPlayedBoost = clampBoost(settings.leastPlayedBoost, 1);
+        }
+
+        chrome.storage.sync.set(sanitizedSettings, () => {
+            if ('shortcutKey' in sanitizedSettings) {
+                elements.currentKey.textContent = sanitizedSettings.shortcutKey;
+            }
         });
     };
 
