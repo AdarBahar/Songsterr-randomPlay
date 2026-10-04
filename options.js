@@ -83,25 +83,45 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.customWeights.classList.toggle('show', mode === 'custom');
     };
 
+    // Storage keys needed to work out the user's custom slider values
+    const CUSTOM_WEIGHT_KEYS = ['weightMode', 'newnessBoost', 'leastPlayedBoost',
+        'customNewnessBoost', 'customLeastPlayedBoost'];
+
+    /**
+     * Works out the user's custom slider values from stored settings.
+     * Settings saved before custom values were stored separately only have
+     * them in the active boosts, and only while Custom is selected.
+     * @param {Object} data - Stored settings (CUSTOM_WEIGHT_KEYS)
+     * @returns {{newnessBoost: number, leastPlayedBoost: number}}
+     */
+    const resolveCustomWeights = (data) => {
+        const legacyCustom = data.weightMode === 'custom' ? data : {};
+        return {
+            newnessBoost: data.customNewnessBoost || legacyCustom.newnessBoost || 1,
+            leastPlayedBoost: data.customLeastPlayedBoost || legacyCustom.leastPlayedBoost || 1
+        };
+    };
+
     // Load saved settings
     chrome.storage.sync.get(
-        ['debug', 'shortcutKey', 'preferredInstrument', 'weightMode', 'newnessBoost', 'leastPlayedBoost',
-            'customNewnessBoost', 'customLeastPlayedBoost'],
+        ['debug', 'shortcutKey', 'preferredInstrument', ...CUSTOM_WEIGHT_KEYS],
         (data) => {
             if (!chrome.runtime.lastError) {
                 elements.debugToggle.checked = data.debug || false;
                 elements.currentKey.textContent = data.shortcutKey || '=';
                 setActiveInstrument(data.preferredInstrument || 'default');
 
-                const mode = data.weightMode || 'off';
-                // Settings saved before custom values were stored separately
-                // only have them in the active boosts, while Custom is selected
-                const legacyCustom = mode === 'custom' ? data : {};
-                customWeights = {
-                    newnessBoost: data.customNewnessBoost || legacyCustom.newnessBoost || 1,
-                    leastPlayedBoost: data.customLeastPlayedBoost || legacyCustom.leastPlayedBoost || 1
-                };
-                applyWeightUI(mode);
+                customWeights = resolveCustomWeights(data);
+                applyWeightUI(data.weightMode || 'off');
+
+                // One-time migration: give older Custom settings their own keys
+                // so they outlive a later switch to a preset
+                if (data.weightMode === 'custom' && data.customNewnessBoost == null) {
+                    chrome.storage.sync.set({
+                        customNewnessBoost: customWeights.newnessBoost,
+                        customLeastPlayedBoost: customWeights.leastPlayedBoost
+                    });
+                }
             }
         }
     );
@@ -184,14 +204,23 @@ document.addEventListener('DOMContentLoaded', () => {
     weightSegButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const mode = btn.dataset.value;
-            // Custom restores the user's own slider values; presets leave them untouched
-            const boosts = mode === 'custom' ? customWeights : WEIGHT_PRESETS[mode];
-            applyWeightUI(mode);
-            saveSettings({
-                weightMode: mode,
-                ...boosts,
-                customNewnessBoost: customWeights.newnessBoost,
-                customLeastPlayedBoost: customWeights.leastPlayedBoost
+
+            // Presets never touch the stored custom slider values
+            if (mode !== 'custom') {
+                applyWeightUI(mode);
+                saveSettings({ weightMode: mode, ...WEIGHT_PRESETS[mode] });
+                return;
+            }
+
+            // Custom restores the user's own slider values. Read them fresh:
+            // the in-memory copy can be stale (settings open in another tab,
+            // or a click before the initial load finished).
+            chrome.storage.sync.get(CUSTOM_WEIGHT_KEYS, (data) => {
+                if (!chrome.runtime.lastError) {
+                    customWeights = resolveCustomWeights(data);
+                }
+                applyWeightUI('custom');
+                saveSettings({ weightMode: 'custom', ...customWeights });
             });
         });
     });
