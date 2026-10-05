@@ -44,7 +44,7 @@ A Chrome extension that adds a random song picker to Songsterr.com. Play a rando
 Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/random-song-songsterr-ext/iieohhnmhcmnchcefjjlfdmobhmoaobe).
 
 ### Firefox
-Not yet listed on addons.mozilla.org. Until it is, load it manually (see below).
+Install from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/random-songsterr-extension/) (Firefox 140 or newer).
 
 ### Manual Installation (Development)
 1. Download or clone this repository
@@ -358,6 +358,9 @@ Contributions are welcome! Please:
 
 - **Repository**: https://github.com/AdarBahar/Songsterr-randomPlay
 - **Issues**: https://github.com/AdarBahar/Songsterr-randomPlay/issues
+- **Chrome Web Store**: https://chromewebstore.google.com/detail/random-song-songsterr-ext/iieohhnmhcmnchcefjjlfdmobhmoaobe
+- **Firefox Add-ons**: https://addons.mozilla.org/firefox/addon/random-songsterr-extension/
+- **Website**: https://www.bahar.co.il/songsterr-randomSong
 - **Songsterr**: https://www.songsterr.com
 
 ## License

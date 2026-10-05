@@ -6,7 +6,7 @@ Entries are added in reverse chronological order.
 
 ## 2026-10-04: Firefox Support & Content-Script Fixes (v1.6.0)
 **Branch**: main
-**Status**: Built and linted; not yet tested in Firefox or submitted to AMO
+**Status**: v1.6.0 tagged; tested in Firefox and submitted to AMO on 2026-10-05 (https://addons.mozilla.org/firefox/addon/random-songsterr-extension/)
 
 **Firefox**:
 - Added `scripts/build-firefox.js` and `build:firefox` / `zip:firefox` / `compile:firefox` npm scripts
