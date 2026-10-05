@@ -50,6 +50,7 @@
   .foot { text-align:center; color:var(--mute); font-size:13px; margin-top:30px; }
   .foot a { color:var(--mute); }
   .foot a:hover { color:var(--accent); }
+  .foot .ver { font-family:'Space Mono',monospace; }
 </style>
 </head>
 <body>
@@ -62,12 +63,13 @@
 
     <header class="title">
       <h1>Privacy Policy</h1>
-      <div class="updated">Last updated: June 17, 2026</div>
+      <div class="updated">Last updated: October 5, 2026</div>
     </header>
 
     <div class="card">
       <h2>Summary</h2>
       <p>Random Favorite Picker for Songsterr does <strong>not collect, sell, or transmit any personal information</strong>. There are no analytics, trackers, or third-party services. The extension runs entirely in your browser and only interacts with Songsterr while you use it.</p>
+      <p>This policy applies to both versions of the extension: the Chrome version (Chrome Web Store) and the Firefox version (Firefox Add-ons). They share the same code and behave the same way.</p>
     </div>
 
     <div class="card">
@@ -79,12 +81,12 @@
         <li>Your randomization settings (mode and the newness / least-played weights)</li>
         <li>Debug mode (enabled or disabled)</li>
       </ul>
-      <p>The extension also keeps a short, in-memory list of the last few songs you played (to avoid repeats). This is never saved to disk and is cleared when the page is closed.</p>
+      <p>To avoid repeats and extra requests, the extension also keeps two temporary items in the Songsterr tab's session storage: the IDs of the last few songs it played, and a copy of your favorites list that expires after one minute. Both stay in your browser, are separate for each tab, and are removed when the tab is closed.</p>
     </div>
 
     <div class="card">
       <h2>How your favorites are used</h2>
-      <p>To pick a random song, the extension reads your favorites list from Songsterr's own API (<code>/api/favorites</code>) using your existing Songsterr login, from within your browser. This data is used only to choose a song to open — it is <strong>never stored long-term, copied, or transmitted to any third party</strong>.</p>
+      <p>To pick a random song, the extension reads your favorites list from Songsterr's own API (<code>/api/favorites</code>) using your existing Songsterr login, from within your browser. This data is used only to choose a song to open. Apart from the one-minute copy described above, it is <strong>never stored, and it is never transmitted to any third party</strong>.</p>
     </div>
 
     <div class="card">
@@ -106,7 +108,9 @@
       <p>Questions about this policy? Email <a href="mailto:adar@bahar.co.il">adar@bahar.co.il</a> or open an issue on <a href="https://github.com/AdarBahar/Songsterr-randomPlay/issues" target="_blank" rel="noopener">GitHub</a>.</p>
     </div>
 
-    <div class="foot">&copy; <span id="year"></span> Adar Bahar ·
+    <div class="foot">&copy; <span id="year"></span> Adar Bahar · <span class="ver">v1.6.0</span> ·
+      <a href="https://chromewebstore.google.com/detail/random-song-songsterr-ext/iieohhnmhcmnchcefjjlfdmobhmoaobe" target="_blank" rel="noopener">Chrome Web Store</a> ·
+      <a href="https://addons.mozilla.org/firefox/addon/random-songsterr-extension/" target="_blank" rel="noopener">Firefox Add-ons</a> ·
       <a href="https://github.com/AdarBahar/Songsterr-randomPlay" target="_blank" rel="noopener">GitHub</a> ·
       <a href="index.html">Home</a>
     </div>

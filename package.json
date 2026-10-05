@@ -2,9 +2,12 @@
   "name": "random-favorite-picker",
   "version": "1.6.0",
   "scripts": {
+    "sync-version": "node scripts/sync-version.js",
+    "prebuild": "npm run sync-version",
     "build": "webpack --mode production",
     "zip": "cd dist && bestzip ../extension.zip *",
     "compile": "npm run build && npm run zip",
+    "prebuild:firefox": "npm run sync-version",
     "build:firefox": "node scripts/build-firefox.js",
     "zip:firefox": "cd dist-firefox && bestzip ../extension-firefox.zip *",
     "compile:firefox": "npm run build:firefox && npm run zip:firefox"
