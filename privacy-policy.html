@@ -13,7 +13,7 @@
     <div class="container">
         <header>
             <h1>Privacy Policy</h1>
-            <p class="last-updated">Last updated: June 17, 2026</p>
+            <p class="last-updated">Last updated: October 5, 2026</p>
         </header>
         
         <main>
@@ -22,6 +22,9 @@
                 <p>
                     The Random Favorite Picker extension for Songsterr does not collect, store, or transmit any personal information. 
                     The extension operates entirely within your browser and only interacts with Songsterr.com when you're actively using the site.
+                </p>
+                <p>
+                    This policy applies to both versions of the extension: the Chrome version (Chrome Web Store) and the Firefox version (Firefox Add-ons).
                 </p>
             </section>
             
@@ -37,8 +40,12 @@
                     <li>Debug mode setting (enabled/disabled)</li>
                 </ul>
                 <p>
-                    This information is stored using Chrome's built-in storage system and can be synchronized across your devices if you use Chrome Sync.
-                    To pick a random song, the extension reads your favorites from Songsterr's API using your existing login, inside your browser; this is used only to choose a song and is never stored long-term or sent to any third party.
+                    This information is stored using your browser's built-in extension storage and can be synchronized across your devices if you use Chrome Sync or Firefox Sync.
+                    To pick a random song, the extension reads your favorites from Songsterr's API using your existing login, inside your browser; this is used only to choose a song and is never sent to any third party.
+                </p>
+                <p>
+                    To avoid repeats and extra requests, the extension keeps two temporary items in the Songsterr tab's session storage: the IDs of the last few songs it played, and a copy of your favorites list that expires after one minute.
+                    Both stay in your browser, are separate for each tab, and are removed when the tab is closed.
                 </p>
             </section>
             
@@ -48,7 +55,7 @@
                     The extension requires minimal permissions to function:
                 </p>
                 <ul>
-                    <li><strong>storage:</strong> To save your keyboard shortcut preference and debug mode setting locally in your browser</li>
+                    <li><strong>storage:</strong> To save the preferences listed above</li>
                 </ul>
                 <p>
                     The extension also uses content scripts that run only on Songsterr.com pages to add the random song button and functionality.
@@ -72,7 +79,9 @@
         </main>
         
         <footer>
-            <p>&copy; 2025 Random Favorite Picker for Songsterr</p>
+            <p>&copy; 2026 Random Favorite Picker for Songsterr &middot;
+                <a href="https://chromewebstore.google.com/detail/random-song-songsterr-ext/iieohhnmhcmnchcefjjlfdmobhmoaobe">Chrome Web Store</a> &middot;
+                <a href="https://addons.mozilla.org/firefox/addon/random-songsterr-extension/">Firefox Add-ons</a></p>
         </footer>
     </div>
 </body>

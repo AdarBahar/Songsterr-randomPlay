@@ -44,7 +44,7 @@ A Chrome extension that adds a random song picker to Songsterr.com. Play a rando
 Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/random-song-songsterr-ext/iieohhnmhcmnchcefjjlfdmobhmoaobe).
 
 ### Firefox
-Not yet listed on addons.mozilla.org. Until it is, load it manually (see below).
+Install from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/random-songsterr-extension/) (Firefox 140 or newer).
 
 ### Manual Installation (Development)
 1. Download or clone this repository
@@ -151,6 +151,11 @@ npm run zip
 # Full compile (build + zip)
 npm run compile
 ```
+
+### Releasing a New Version
+1. Bump `version` in `manifest.json` and `package.json`.
+2. Run `npm run compile` and `npm run compile:firefox`. Every build first runs `scripts/sync-version.js`, which stamps the manifest version into the landing page footers (`landing/index.html`, `landing/privacy.html`).
+3. Commit, tag (`vX.Y.Z`), upload the zips to the stores, and deploy `landing/` so the live site shows the new version.
 
 ### Build Output
 - **Directory**: `dist/`
@@ -358,6 +363,9 @@ Contributions are welcome! Please:
 
 - **Repository**: https://github.com/AdarBahar/Songsterr-randomPlay
 - **Issues**: https://github.com/AdarBahar/Songsterr-randomPlay/issues
+- **Chrome Web Store**: https://chromewebstore.google.com/detail/random-song-songsterr-ext/iieohhnmhcmnchcefjjlfdmobhmoaobe
+- **Firefox Add-ons**: https://addons.mozilla.org/firefox/addon/random-songsterr-extension/
+- **Website**: https://www.bahar.co.il/songsterr-randomSong
 - **Songsterr**: https://www.songsterr.com
 
 ## License

@@ -84,7 +84,7 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 ## Current State (as of v1.4.1)
 
 - ✅ **Live on the Chrome Web Store** (v1.5.0)
-- 🦊 **Firefox build available** (`npm run compile:firefox`, Firefox 140+) - not yet submitted to AMO, untested in a real Firefox as of 2026-10-04
+- 🦊 **Firefox version** (`npm run compile:firefox`, Firefox 140+) - v1.6.0 tested in Firefox and submitted to AMO on 2026-10-05
 - ✅ Fully functional with current Songsterr layout
 - ✅ Adaptive UI with MutationObserver + fallback selectors
 - ✅ Settings persistence via Chrome sync storage
@@ -229,5 +229,5 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 
 - **Repository**: https://github.com/AdarBahar/Songsterr-randomPlay
 - **Chrome Web Store**: https://chromewebstore.google.com/detail/random-song-songsterr-ext/iieohhnmhcmnchcefjjlfdmobhmoaobe
-- **Firefox Add-ons (AMO)**: Not yet submitted
+- **Firefox Add-ons (AMO)**: https://addons.mozilla.org/firefox/addon/random-songsterr-extension/
 - **Songsterr**: https://www.songsterr.com
