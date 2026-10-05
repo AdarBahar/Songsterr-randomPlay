@@ -31,7 +31,9 @@ A Chrome extension that adds a random song picker to Songsterr.com. Play a rando
 - **🦊 Chrome and Firefox** - Same code base, separate Firefox package (Firefox 140+)
 
 ### User Experience
-- **Dismissible notifications** - Color-coded feedback (loading, success, error)
+- **Dismissible notifications** - Color-coded feedback (loading, success, error), shown top-center
+- **Settings at a glance** - Active randomization and instrument shown in the popup, the Random button tooltip, and the loading notification
+- **Instant saves** - Settings save as you change them, confirmed by a "Change saved" snackbar
 - **Adaptive UI** - Multiple fallback strategies for Songsterr's dynamic layout
 - **Settings persistence** - Preferences sync across devices via Chrome sync storage
 - **Real-time updates** - Settings changes apply immediately across all tabs
@@ -194,12 +196,20 @@ See [deployment.md](.codeagent/current/deployment.md) for detailed deployment in
 
 ## Version History
 
-### Unreleased - Firefox Support & Fixes
+### v1.6.0 (2026-10-04) - Firefox Support & Fixes
 - 🦊 **Firefox build** - `npm run compile:firefox` produces an AMO-ready package (event-page background, gecko add-on ID)
 - 🎲 **Repeat avoidance fixed** - Song history and the favorites cache now persist in `sessionStorage`; previously every play's page navigation wiped them
 - ⌨️ **Shift + shortcut fixed** - Force refresh now fires for symbol and letter keys (Shift + `=` reports as `+`)
 - 🔍 **Button re-injection** - The toolbar observer keeps running and restores the button after an SPA re-render
 - ⏱️ **Startup race fixed** - The content script no longer depends on the `load` event, which may already have fired
+- ⚙️ **Settings saves fixed** - Changing one setting no longer risks reverting another
+- 🔁 **Small libraries** - Never replays the song just played when another favorite exists
+- ⚖️ **Fair weighting** - Favorites with identical dates now get equal odds
+- 🗂️ **Settings page layout** - Responsive card grid that uses the page width; fits one screen on desktop
+- ✅ **"Change saved" confirmation** - A snackbar confirms every settings change
+- 🎚️ **Custom sliders remembered** - Switching to a preset and back to Custom restores your slider values
+- 🧾 **Active settings at a glance** - Randomization and instrument shown in the popup, the Random button tooltip, and the loading notification
+- 📍 **Notifications centered** - On-page notifications now appear top-center instead of top-right
 - 🖼️ **Icons** - `icon16.png` is now a true 16px image; the old 32px file is `icon32.png`
 
 ### v1.5.0 (2026-06-17) - Instruments, Weighted Randomization & Redesign

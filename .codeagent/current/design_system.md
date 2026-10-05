@@ -8,8 +8,9 @@
 
 #### Notification Types
 ```javascript
-showNotification(message, type, timeout)
+showNotification(message, type, timeout, detail)
 ```
+`detail` (v1.6+) is an optional smaller second line; the loading notification uses it for the active settings summary.
 
 **Types** (defined in `NOTIFICATION_COLORS` constant, v1.4+):
 - `"loading"` - Orange (#FF9800) with hourglass icon ⏳
@@ -21,20 +22,21 @@ showNotification(message, type, timeout)
 ```css
 position: fixed
 top: NOTIFICATION_TOP_PX (20px)
-right: NOTIFICATION_RIGHT_PX (20px)
+left: 50%; transform: translateX(-50%)   /* top-center since v1.6 (was top-right) */
+text-align: center
 padding: 12px 20px
 border-radius: 4px
 box-shadow: 0 2px 8px rgba(0,0,0,0.3)
 z-index: NOTIFICATION_Z_INDEX (10000)
 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
 font-size: 14px
-max-width: NOTIFICATION_MAX_WIDTH_PX (300px)
+max-width: min(NOTIFICATION_MAX_WIDTH_PX (420px), 100vw - 40px)
 ```
 
 #### Behavior
 - **Auto-dismiss**: After timeout (if > 0)
 - **Manual dismiss**: Call `notification.dismiss()`
-- **Animations**: Slide-in from right, slide-out to right
+- **Animations**: Slide down into place, slide up to dismiss (v1.6+)
 - **Lifecycle**: Created → Shown → Dismissed → Removed from DOM
 
 #### Usage Pattern
@@ -268,28 +270,34 @@ mouseleave: img.style.opacity = '0.8'
 - **Click**: No animation
 - **Injection**: Instant (no fade-in)
 
-### Loading Notifications (v1.3+)
-- **Slide-in**: From right (400px) to position (0)
-  - Animation: `slideInRight 0.3s ease-out`
-  - Opacity: 0 → 1
-- **Slide-out**: From position (0) to right (400px)
-  - Animation: `slideOutRight 0.3s ease-out`
-  - Opacity: 1 → 0
-- **Timing**: 0.3s for both in/out
+### Loading Notifications (v1.3+, top-center since v1.6)
+- **Slide-in**: From 20px above to position, opacity 0 → 1 (`randomSongSlideIn 0.3s ease-out`)
+- **Slide-out**: From position to 20px above, opacity 1 → 0 (`randomSongSlideOut 0.3s ease-out`)
 - **Trigger**: Auto on timeout or manual via `dismiss()`
 
-### CSS Keyframes (v1.3+)
+### CSS Keyframes (v1.6+)
 ```css
-@keyframes slideInRight {
-  from { transform: translateX(400px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+@keyframes randomSongSlideIn {
+  from { transform: translate(-50%, -20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
 }
 
-@keyframes slideOutRight {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(400px); opacity: 0; }
+@keyframes randomSongSlideOut {
+  from { transform: translate(-50%, 0); opacity: 1; }
+  to { transform: translate(-50%, -20px); opacity: 0; }
 }
 ```
+The `translate(-50%, …)` keeps the notification horizontally centered during the animation.
+
+### Settings Page (v1.6+)
+- **Layout**: CSS grid, `max-width: 1080px`. 1 column under 620px; 2 columns from 620px (larger cards full width); 6 tracks from 960px (Randomization + Preferred Instrument span 3 each, the three small cards span 2 each)
+- **Tracks** use `minmax(0, 1fr)` so wide content (sliders) can't force horizontal overflow
+- **Snackbar**: bottom-center pill, "✓ Change saved" for 2s after each successful save; red "!" variant on failure (`role="status"`, `aria-live="polite"`)
+- **Sliders**: below 420px the label wraps above the track
+
+### Popup Settings Summary (v1.6+)
+- Card between the login hint and Keyboard Shortcuts: "Randomization: <mode> | Instrument: <instrument>"
+- Same wording as the Random button tooltip and the loading notification; labels match the settings page
 
 ### Future Enhancements
 - ✅ Smooth options panel expand/collapse (implemented v1.3)

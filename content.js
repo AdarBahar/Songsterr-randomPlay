@@ -14,17 +14,14 @@ const NOTIFICATION_ANIMATION_MS = 300;
 /** Notification position from top in pixels */
 const NOTIFICATION_TOP_PX = 20;
 
-/** Notification position from right in pixels */
-const NOTIFICATION_RIGHT_PX = 20;
-
 /** Notification max width in pixels */
-const NOTIFICATION_MAX_WIDTH_PX = 300;
+const NOTIFICATION_MAX_WIDTH_PX = 420;
 
 /** Notification z-index */
 const NOTIFICATION_Z_INDEX = 10000;
 
 /** Animation slide distance in pixels */
-const SLIDE_DISTANCE_PX = 400;
+const SLIDE_DISTANCE_PX = 20;
 
 /** Vertical gap between stacked notifications in pixels */
 const NOTIFICATION_GAP_PX = 10;
@@ -34,6 +31,26 @@ const DEFAULT_SHORTCUT_KEY = '=';
 
 /** Default preferred instrument ('default' = use the song's default track) */
 const DEFAULT_PREFERRED_INSTRUMENT = 'default';
+
+/** Default randomization mode ('off' = pure random) */
+const DEFAULT_WEIGHT_MODE = 'off';
+
+/** Display names for the randomization modes (match the settings page) */
+const WEIGHT_MODE_LABELS = {
+    off: 'Pure random',
+    new: 'Discover new',
+    forgotten: 'Revisit forgotten',
+    both: 'Fresh & forgotten',
+    custom: 'Custom'
+};
+
+/** Display names for the preferred-instrument setting */
+const INSTRUMENT_LABELS = {
+    default: 'Default',
+    guitar: 'Guitar',
+    bass: 'Bass',
+    drums: 'Drums'
+};
 
 /** Default randomization boosts (1 = no bias / uniform random for that signal) */
 const DEFAULT_NEWNESS_BOOST = 1;
@@ -104,6 +121,9 @@ let currentShortcutKey = DEFAULT_SHORTCUT_KEY;
 /** @type {string} Preferred instrument: 'default', 'guitar', 'bass', or 'drums' */
 let preferredInstrument = DEFAULT_PREFERRED_INSTRUMENT;
 
+/** @type {string} Randomization mode: 'off', 'new', 'forgotten', 'both', or 'custom' */
+let weightMode = DEFAULT_WEIGHT_MODE;
+
 /** @type {number} Max-boost ratio (newest vs oldest) for the 'newly added' signal */
 let newnessBoost = DEFAULT_NEWNESS_BOOST;
 
@@ -143,6 +163,24 @@ const logDebug = (...args) => {
 };
 
 /**
+ * One-line summary of the active randomization and instrument settings.
+ * Same wording as the extension popup.
+ * @returns {string}
+ */
+const getSettingsSummary = () => {
+    const mode = WEIGHT_MODE_LABELS[weightMode] || WEIGHT_MODE_LABELS[DEFAULT_WEIGHT_MODE];
+    const instrument = INSTRUMENT_LABELS[preferredInstrument] || INSTRUMENT_LABELS[DEFAULT_PREFERRED_INSTRUMENT];
+    return `Randomization: ${mode} | Instrument: ${instrument}`;
+};
+
+/**
+ * Tooltip for the toolbar button: the shortcut plus the active settings.
+ * @returns {string}
+ */
+const getButtonTitle = () =>
+    `Play Random Song (Shortcut: ${currentShortcutKey})\n${getSettingsSummary()}`;
+
+/**
  * Computes the top offset for the next notification, stacked below any
  * currently visible ones.
  * @returns {number} Top position in pixels
@@ -171,14 +209,15 @@ const updateNotificationPositions = () => {
 };
 
 /**
- * Shows a temporary notification to the user
+ * Shows a temporary notification to the user, centered at the top of the page
  * Notifications stack vertically if multiple are shown
  * @param {string} message - The message to display
  * @param {string} type - 'success', 'error', 'info', or 'loading'
  * @param {number} duration - Duration in ms (0 = no auto-dismiss, for loading states)
+ * @param {string} detail - Optional smaller second line
  * @returns {Object} Notification element with dismiss() method
  */
-const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATION_MS) => {
+const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATION_MS, detail = '') => {
     const notification = document.createElement('div');
     notification.textContent = message;
 
@@ -188,7 +227,10 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
     notification.style.cssText = `
         position: fixed;
         top: ${topPosition}px;
-        right: ${NOTIFICATION_RIGHT_PX}px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: max-content;
+        text-align: center;
         padding: 12px 20px;
         background: ${NOTIFICATION_COLORS[type] || NOTIFICATION_COLORS.info};
         color: white;
@@ -197,8 +239,8 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
         z-index: ${NOTIFICATION_Z_INDEX};
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         font-size: 14px;
-        max-width: ${NOTIFICATION_MAX_WIDTH_PX}px;
-        animation: slideInRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out;
+        max-width: min(${NOTIFICATION_MAX_WIDTH_PX}px, calc(100vw - 40px));
+        animation: randomSongSlideIn ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out;
         transition: top ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out;
     `;
 
@@ -209,28 +251,35 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
         notification.appendChild(spinner);
     }
 
+    if (detail) {
+        const detailLine = document.createElement('div');
+        detailLine.textContent = detail;
+        detailLine.style.cssText = 'margin-top: 4px; font-size: 12px; opacity: 0.9;';
+        notification.appendChild(detailLine);
+    }
+
     // Add animation keyframes
     if (!document.getElementById('notification-styles')) {
         const style = document.createElement('style');
         style.id = 'notification-styles';
         style.textContent = `
-            @keyframes slideInRight {
+            @keyframes randomSongSlideIn {
                 from {
-                    transform: translateX(${SLIDE_DISTANCE_PX}px);
+                    transform: translate(-50%, -${SLIDE_DISTANCE_PX}px);
                     opacity: 0;
                 }
                 to {
-                    transform: translateX(0);
+                    transform: translate(-50%, 0);
                     opacity: 1;
                 }
             }
-            @keyframes slideOutRight {
+            @keyframes randomSongSlideOut {
                 from {
-                    transform: translateX(0);
+                    transform: translate(-50%, 0);
                     opacity: 1;
                 }
                 to {
-                    transform: translateX(${SLIDE_DISTANCE_PX}px);
+                    transform: translate(-50%, -${SLIDE_DISTANCE_PX}px);
                     opacity: 0;
                 }
             }
@@ -248,7 +297,7 @@ const showNotification = (message, type = 'info', duration = NOTIFICATION_DURATI
         element: notification,
         dismiss: () => {
             if (timeoutId) clearTimeout(timeoutId);
-            notification.style.animation = `slideOutRight ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out`;
+            notification.style.animation = `randomSongSlideOut ${NOTIFICATION_ANIMATION_MS / 1000}s ease-out forwards`;
             setTimeout(() => {
                 notification.remove();
                 // Remove from active notifications array
@@ -310,7 +359,7 @@ const createRandomButton = (templateButton = null) => {
                 button.id = 'random-icon';
                 button.href = '#';
                 button.setAttribute('aria-active', 'false');
-                button.title = `Play Random Song (Shortcut: ${currentShortcutKey})`;
+                button.title = getButtonTitle();
 
                 // Replace SVG content
                 const svg = button.querySelector('svg');
@@ -348,7 +397,7 @@ const createRandomButton = (templateButton = null) => {
     const button = document.createElement('a');
     button.id = 'random-icon';
     button.href = '#';
-    button.title = `Play Random Song (Shortcut: ${currentShortcutKey})`;
+    button.title = getButtonTitle();
 
     // Try to detect and use existing classes
     const existingNavItem = document.querySelector('nav a, header a');
@@ -671,7 +720,7 @@ const selectRandomSong = (favoriteSongs) => {
  */
 const playRandomSong = async (forceRefresh = false) => {
     // Show loading notification
-    const loadingNotification = showNotification('Loading favorites...', 'loading', 0);
+    const loadingNotification = showNotification('Loading random song...', 'loading', 0, getSettingsSummary());
 
     try {
         // Clear cache and history if force refresh
@@ -753,6 +802,9 @@ const initializeSettings = async () => {
         }
 
         if (weightResponse) {
+            if (weightResponse.weightMode) {
+                weightMode = weightResponse.weightMode;
+            }
             if (typeof weightResponse.newnessBoost === 'number') {
                 newnessBoost = weightResponse.newnessBoost;
             }
@@ -772,12 +824,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (typeof message.settings.shortcutKey !== 'undefined') {
             currentShortcutKey = message.settings.shortcutKey;
             logDebug('Shortcut key updated to:', currentShortcutKey);
-
-            // Update button tooltip if it exists
-            const button = document.getElementById('random-icon');
-            if (button) {
-                button.title = `Play Random Song (Shortcut: ${currentShortcutKey})`;
-            }
         }
         if (typeof message.settings.debug !== 'undefined') {
             isDebugMode = message.settings.debug;
@@ -794,6 +840,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (typeof message.settings.leastPlayedBoost !== 'undefined') {
             leastPlayedBoost = message.settings.leastPlayedBoost;
             logDebug('Least-played boost updated to:', leastPlayedBoost);
+        }
+        if (typeof message.settings.weightMode !== 'undefined') {
+            weightMode = message.settings.weightMode;
+            logDebug('Randomization mode updated to:', weightMode);
+        }
+
+        // Keep the button tooltip in step with the shortcut and settings summary
+        const button = document.getElementById('random-icon');
+        if (button) {
+            button.title = getButtonTitle();
         }
     } else if (message.action === 'clearCacheAndHistory') {
         // Clear favorites cache and song history

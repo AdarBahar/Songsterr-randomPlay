@@ -84,6 +84,7 @@
     .reveal:nth-child(3) { animation-delay: 0.14s; }
     .reveal:nth-child(4) { animation-delay: 0.20s; }
     .reveal:nth-child(5) { animation-delay: 0.26s; }
+    .reveal:nth-child(6) { animation-delay: 0.32s; }
     @keyframes rise {
       to { opacity: 1; transform: translateY(0); }
     }
@@ -203,6 +204,20 @@
     }
     .hint .ic { font-size: 15px; line-height: 1.3; flex-shrink: 0; }
 
+    /* Active settings summary */
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 3px 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-mute);
+    }
+    .summary b { color: var(--text); font-weight: 600; }
+    .summary .bar { color: var(--text-mute); opacity: 0.5; }
+
     /* Shortcut rows */
     .srow {
       display: flex;
@@ -317,6 +332,13 @@
     <div class="hint reveal">
       <span class="ic">💡</span>
       <div>Make sure you're logged in to Songsterr and have favorites in your list.</div>
+    </div>
+
+    <!-- Active settings -->
+    <div class="card summary reveal" id="settingsSummary">
+      <span>Randomization: <b id="summaryRandomization">Pure random</b></span>
+      <span class="bar" aria-hidden="true">|</span>
+      <span>Instrument: <b id="summaryInstrument">Default</b></span>
     </div>
 
     <!-- Shortcuts -->

@@ -4,7 +4,7 @@ Entries are added in reverse chronological order.
 
 ---
 
-## 2026-10-04: Firefox Support & Content-Script Fixes (unreleased)
+## 2026-10-04: Firefox Support & Content-Script Fixes (v1.6.0)
 **Branch**: main
 **Status**: Built and linted; not yet tested in Firefox or submitted to AMO
 
@@ -23,6 +23,14 @@ Entries are added in reverse chronological order.
 
 **Assets**:
 - `images/icon16.png` was 32px wide; it is now a real 16px icon and the 32px file is `images/icon32.png` (both declared in the manifest)
+
+**Settings & feedback (PR #3)**:
+- Settings page: responsive card grid (uses the page width, fits one screen on desktop), "Change saved" snackbar after every save
+- Custom slider values stored separately (`customNewnessBoost` / `customLeastPlayedBoost`) and restored when returning to Custom; one-time migration for older settings
+- Review follow-ups: preset clicks no longer write the custom keys; a pending Custom click can't override a newer selection (selection counter); settings saves write only changed fields; small libraries never replay the last song; tied timestamps get equal weights
+- Active settings line ("Randomization: … | Instrument: …") in the popup, the Random button tooltip and the loading notification; `background.js` now passes `weightMode` to the content script
+- On-page notifications moved from top-right to top-center
+- Version bumped to 1.6.0
 
 **Next Steps**:
 - Test in Firefox (toolbar icon, logged-in favorites fetch, settings sync)

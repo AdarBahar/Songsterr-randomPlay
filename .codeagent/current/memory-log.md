@@ -296,6 +296,15 @@ const setupToolbarObserver = (hasInjected = false) => {
 - Content scripts automatically have access to page DOM
 - Web accessible resources needed for images used in content scripts
 
+### Settings Storage Patterns (v1.6, Oct 2026)
+- **Write only what changed**: `saveSettings()` sets just the fields passed in. Re-reading and rewriting every key let overlapping saves restore stale values.
+- **Custom sliders have their own keys**: `customNewnessBoost` / `customLeastPlayedBoost` hold the user's slider positions; `newnessBoost` / `leastPlayedBoost` are the *active* boosts for whichever mode is selected. Presets overwrite the active boosts only.
+- **Never write from a long-lived in-memory copy**: preset clicks don't write the custom keys; clicking Custom re-reads them from storage first (another settings tab may have changed them).
+- **Guard async reads with a selection counter**: the Custom click's storage read is async, so its callback checks `weightSelectionId` and does nothing if a newer selection was made meanwhile.
+- **Legacy migration**: settings from before v1.6 with Custom selected have no custom keys; they are copied from the active boosts once, at settings-page load.
+- **Known gap**: open settings pages aren't kept in sync; moving one slider in a stale tab saves both sliders.
+- **Display labels are duplicated** in `content.js` and `popup.js` (`WEIGHT_MODE_LABELS`, `INSTRUMENT_LABELS`) because the scripts share no module; keep them in step with the button text in `options.html`.
+
 ### Cross-Browser Notes (Firefox, Oct 2026)
 - Firefox MV3 has no background service worker: `scripts/build-firefox.js` rewrites `background` to `{ scripts: ['background.js'] }` (event page)
 - `browser_specific_settings.gecko.id` is required for `storage.sync` and is permanent once published on AMO

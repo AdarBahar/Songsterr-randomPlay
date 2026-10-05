@@ -46,7 +46,7 @@
       background: var(--bg);
       min-height: 100vh;
       line-height: 1.55;
-      padding: 48px 20px 64px;
+      padding: 32px 20px 40px;
       position: relative;
       -webkit-font-smoothing: antialiased;
     }
@@ -61,7 +61,19 @@
       z-index: 0;
     }
 
-    .container { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; }
+    .container { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; }
+
+    /* Card grid: 1 column on narrow screens, widening to use the page width */
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    @media (min-width: 620px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid .span-all { grid-column: 1 / -1; }
+    }
+    @media (min-width: 960px) {
+      .grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .grid .card-wide { grid-column: span 3; }
+      .grid .card-small { grid-column: span 2; }
+    }
 
     /* Staggered entrance */
     .reveal { opacity: 0; transform: translateY(10px); animation: rise 0.55s cubic-bezier(0.16,1,0.3,1) forwards; }
@@ -72,7 +84,7 @@
     @keyframes rise { to { opacity: 1; transform: translateY(0); } }
 
     /* Header */
-    .header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+    .header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
     .eq { display: flex; align-items: flex-end; gap: 4px; height: 38px; width: 38px; flex-shrink: 0; }
     .eq span {
       flex: 1;
@@ -96,7 +108,6 @@
       border: 1px solid rgba(77,141,255,0.22);
       border-radius: var(--radius);
       padding: 14px 18px;
-      margin-bottom: 16px;
       font-size: 14px;
       color: var(--text-dim);
     }
@@ -108,7 +119,6 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 22px 24px;
-      margin-bottom: 16px;
     }
 
     .label {
@@ -124,14 +134,14 @@
     .custom-weights.show { display: block; }
     .slider-row { display: flex; align-items: center; gap: 14px; }
     .slider-row + .slider-row { margin-top: 16px; }
-    .slider-label { flex: 0 0 140px; font-size: 13.5px; color: var(--text-dim); }
+    .slider-label { flex: 0 1 140px; font-size: 13.5px; color: var(--text-dim); }
     .slider-value {
       flex: 0 0 38px; text-align: right;
       font-family: 'Space Mono', ui-monospace, monospace;
       font-size: 14px; font-weight: 400; color: var(--accent);
     }
     input[type="range"] {
-      flex: 1; -webkit-appearance: none; appearance: none;
+      flex: 1; min-width: 0; -webkit-appearance: none; appearance: none;
       height: 6px; border-radius: 3px;
       background: var(--surface-3);
       cursor: pointer;
@@ -145,7 +155,18 @@
       transition: transform 0.12s ease;
     }
     input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    input[type="range"]::-moz-range-thumb {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+      border: 2px solid #0d0d0f;
+      box-shadow: 0 0 0 1px var(--accent), 0 2px 8px var(--glow);
+    }
     input[type="range"]:focus { outline: none; }
+    @media (max-width: 420px) {
+      /* Label on its own line so the slider track keeps a usable length */
+      .slider-row { flex-wrap: wrap; row-gap: 8px; }
+      .slider-label { flex: 1 0 100%; }
+    }
     input[type="range"]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 1px var(--accent), 0 0 0 5px var(--glow); }
 
     /* Segmented control */
@@ -239,9 +260,34 @@
     .footer .sep { opacity: 0.4; }
     .footer .ver { font-family: 'Space Mono', ui-monospace, monospace; color: var(--accent); font-size: 11px; }
 
+    /* Snackbar: confirms that a change was saved */
+    .snackbar {
+      position: fixed; left: 50%; bottom: 28px; z-index: 10;
+      display: flex; align-items: center; gap: 9px;
+      max-width: calc(100vw - 40px);
+      padding: 11px 18px;
+      font-size: 14px; font-weight: 600; color: var(--text);
+      background: var(--surface-3);
+      border: 1px solid var(--border-2);
+      border-radius: 999px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+      opacity: 0; visibility: hidden;
+      transform: translate(-50%, 12px);
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+      pointer-events: none;
+    }
+    .snackbar.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+    .snackbar .snack-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+      font-size: 12px; color: #06210f; background: #4ade80;
+    }
+    .snackbar.is-error .snack-icon { color: #fff; background: var(--danger); }
+
     @media (prefers-reduced-motion: reduce) {
       .reveal, .eq span { animation: none; }
       .reveal { opacity: 1; transform: none; }
+      .snackbar { transition: none; }
     }
   </style>
 </head>
@@ -256,14 +302,15 @@
       </div>
     </div>
 
+    <div class="grid">
     <!-- Hint -->
-    <div class="hint reveal">
+    <div class="hint span-all reveal">
       <span class="ic">💡</span>
       <div>Make sure you're logged in to Songsterr and have favorites in your list.</div>
     </div>
 
     <!-- Randomization -->
-    <div class="card reveal">
+    <div class="card card-wide span-all reveal">
       <div class="label"><span class="dot"></span> Randomization</div>
       <p class="desc">Bias random picks toward newer or less-played favorites. "Pure random" gives every favorite an equal chance.</p>
       <div class="segmented wrap" id="weightSeg" role="group" aria-label="Randomization">
@@ -288,7 +335,7 @@
     </div>
 
     <!-- Preferred Instrument -->
-    <div class="card reveal">
+    <div class="card card-wide span-all reveal">
       <div class="label"><span class="dot"></span> Preferred Instrument</div>
       <p class="desc">Open this instrument's track when the song has one (otherwise the default track).</p>
       <div class="segmented" id="instrumentSeg" role="group" aria-label="Preferred instrument">
@@ -300,7 +347,7 @@
     </div>
 
     <!-- Keyboard Shortcut -->
-    <div class="card reveal">
+    <div class="card card-small reveal">
       <div class="label"><span class="dot"></span> Keyboard Shortcut</div>
       <p class="desc">Customize the key to trigger random playback (while a Songsterr tab is focused).</p>
       <div class="row">
@@ -310,7 +357,7 @@
     </div>
 
     <!-- Debug Mode -->
-    <div class="card reveal">
+    <div class="card card-small reveal">
       <div class="label"><span class="dot"></span> Debug Mode</div>
       <p class="desc">Show detailed logs in the browser console for troubleshooting.</p>
       <label class="switch-row">
@@ -323,10 +370,12 @@
     </div>
 
     <!-- Clear Cache -->
-    <div class="card reveal">
+    <div class="card card-small span-all reveal">
       <div class="label"><span class="dot"></span> Cache &amp; History</div>
       <p class="desc">Clear cached favorites and song history to force a fresh fetch.</p>
       <button id="clearCacheBtn" class="btn-danger">🗑 Clear Cache &amp; History</button>
+    </div>
+
     </div>
 
     <!-- Footer -->
@@ -341,6 +390,11 @@
       <span class="sep">•</span>
       <a href="https://www.bahar.co.il/songsterr-randomSong/privacy.html" target="_blank">Privacy</a>
     </div>
+  </div>
+
+  <div class="snackbar" id="snackbar" role="status" aria-live="polite">
+    <span class="snack-icon" id="snackbarIcon" aria-hidden="true">✓</span>
+    <span id="snackbarText">Change saved</span>
   </div>
 
   <script src="options.js"></script>

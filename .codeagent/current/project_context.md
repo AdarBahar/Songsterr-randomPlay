@@ -33,6 +33,10 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 9. **Song History Tracking** (v1.4+): Avoids repeating last 10 songs for better variety
 10. **Modifier Key Support** (v1.4+): Shift+key for force refresh (clears cache & history)
 11. **Dynamic Toolbar Detection** (v1.4+): MutationObserver for robust UI injection in SPAs
+12. **Preferred Instrument & Weighted Randomization** (v1.5+): open the Guitar/Bass/Drums track; presets or custom sliders favor newly added / least-played favorites
+13. **Settings Page** (v1.5+, responsive grid in v1.6): full options tab; changes save immediately with a "Change saved" snackbar; custom slider values are remembered across presets
+14. **Settings Summary** (v1.6+): active randomization + instrument shown in the popup, the Random button tooltip and the loading notification
+15. **Firefox Build** (v1.6+): `npm run compile:firefox`
 
 ## Architecture
 
@@ -56,12 +60,14 @@ Enable Songsterr users to discover and practice songs from their favorites list 
   - Broadcasts settings changes to all tabs
   - Manages extension installation events
 
-- **popup.js/popup.html**: Extension popup UI
-  - Settings interface for keyboard shortcut customization
-  - Debug mode toggle
-  - Clear cache & history button
-  - User instructions and links
-  - Smooth CSS animations for options panel (slide-down/up)
+- **popup.js/popup.html**: Extension popup UI (launcher since v1.5)
+  - Active settings summary (randomization + instrument, v1.6+)
+  - Shortcut hints, "Open Settings" button, links
+
+- **options.js/options.html**: Full settings page (v1.5+)
+  - Randomization presets + custom sliders, preferred instrument, shortcut key, debug toggle, clear cache & history
+  - Each change saves only its own fields to `chrome.storage.sync`
+  - Storage keys: `shortcutKey`, `debug`, `preferredInstrument`, `weightMode`, `newnessBoost`, `leastPlayedBoost` (active boosts, read by content.js), `customNewnessBoost`, `customLeastPlayedBoost` (the user's slider values, v1.6+)
 
 - **manifest.json**: Extension configuration (Manifest V3)
   - Permissions: storage

@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
         openSettingsBtn: document.getElementById('openSettingsBtn'),
         shortcutKeyDisplay: document.getElementById('shortcutKeyDisplay'),
         shortcutKeyDisplay2: document.getElementById('shortcutKeyDisplay2'),
+        summaryRandomization: document.getElementById('summaryRandomization'),
+        summaryInstrument: document.getElementById('summaryInstrument'),
         aboutToggle: document.getElementById('aboutToggle'),
         aboutList: document.getElementById('aboutList')
     };
@@ -13,12 +15,29 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.currentYear.textContent = new Date().getFullYear();
     elements.appVersion.textContent = `v${chrome.runtime.getManifest().version}`;
 
-    // Show the current shortcut key in the read-only hints
-    chrome.storage.sync.get('shortcutKey', (data) => {
+    // Display names for the randomization modes and instruments (match the settings page)
+    const WEIGHT_MODE_LABELS = {
+        off: 'Pure random',
+        new: 'Discover new',
+        forgotten: 'Revisit forgotten',
+        both: 'Fresh & forgotten',
+        custom: 'Custom'
+    };
+    const INSTRUMENT_LABELS = {
+        default: 'Default',
+        guitar: 'Guitar',
+        bass: 'Bass',
+        drums: 'Drums'
+    };
+
+    // Show the current shortcut key and active settings (read-only)
+    chrome.storage.sync.get(['shortcutKey', 'weightMode', 'preferredInstrument'], (data) => {
         if (!chrome.runtime.lastError) {
             const key = data.shortcutKey || '=';
             elements.shortcutKeyDisplay.textContent = key;
             elements.shortcutKeyDisplay2.textContent = key;
+            elements.summaryRandomization.textContent = WEIGHT_MODE_LABELS[data.weightMode] || WEIGHT_MODE_LABELS.off;
+            elements.summaryInstrument.textContent = INSTRUMENT_LABELS[data.preferredInstrument] || INSTRUMENT_LABELS.default;
         }
     });
 

@@ -12,7 +12,31 @@ document.addEventListener('DOMContentLoaded', () => {
         newnessSlider: document.getElementById('newnessSlider'),
         leastPlayedSlider: document.getElementById('leastPlayedSlider'),
         newnessValue: document.getElementById('newnessValue'),
-        leastPlayedValue: document.getElementById('leastPlayedValue')
+        leastPlayedValue: document.getElementById('leastPlayedValue'),
+        snackbar: document.getElementById('snackbar'),
+        snackbarIcon: document.getElementById('snackbarIcon'),
+        snackbarText: document.getElementById('snackbarText')
+    };
+
+    // How long the "Change saved" snackbar stays visible, in milliseconds
+    const SNACKBAR_DURATION_MS = 2000;
+    let snackbarTimer = null;
+
+    /**
+     * Shows a brief confirmation snackbar. Repeated calls restart the timer.
+     * @param {string} message
+     * @param {boolean} isError
+     */
+    const showSnackbar = (message, isError = false) => {
+        elements.snackbarText.textContent = message;
+        elements.snackbarIcon.textContent = isError ? '!' : '✓';
+        elements.snackbar.classList.toggle('is-error', isError);
+        elements.snackbar.classList.add('show');
+
+        if (snackbarTimer) clearTimeout(snackbarTimer);
+        snackbarTimer = setTimeout(() => {
+            elements.snackbar.classList.remove('show');
+        }, SNACKBAR_DURATION_MS);
     };
 
     // Randomization presets -> (newnessBoost, leastPlayedBoost)
@@ -41,34 +65,63 @@ document.addEventListener('DOMContentLoaded', () => {
         weightSegButtons.forEach(btn => btn.classList.toggle('is-active', btn.dataset.value === mode));
     };
 
+    // The user's own slider positions. Kept separately from the active boosts
+    // so they survive switching to a preset and back to Custom.
+    let customWeights = { newnessBoost: 1, leastPlayedBoost: 1 };
+
     /**
-     * Reflects the randomization settings in the UI (preset, sliders, labels).
+     * Reflects the randomization mode in the UI. The sliders always show the
+     * user's custom values, whichever mode is active.
      * @param {string} mode - Preset key or 'custom'
-     * @param {number} newnessBoost
-     * @param {number} leastPlayedBoost
      */
-    const applyWeightUI = (mode, newnessBoost, leastPlayedBoost) => {
+    const applyWeightUI = (mode) => {
         setActiveWeight(mode);
-        elements.newnessSlider.value = newnessBoost;
-        elements.leastPlayedSlider.value = leastPlayedBoost;
-        elements.newnessValue.textContent = `${newnessBoost}×`;
-        elements.leastPlayedValue.textContent = `${leastPlayedBoost}×`;
+        elements.newnessSlider.value = customWeights.newnessBoost;
+        elements.leastPlayedSlider.value = customWeights.leastPlayedBoost;
+        elements.newnessValue.textContent = `${customWeights.newnessBoost}×`;
+        elements.leastPlayedValue.textContent = `${customWeights.leastPlayedBoost}×`;
         elements.customWeights.classList.toggle('show', mode === 'custom');
+    };
+
+    // Storage keys needed to work out the user's custom slider values
+    const CUSTOM_WEIGHT_KEYS = ['weightMode', 'newnessBoost', 'leastPlayedBoost',
+        'customNewnessBoost', 'customLeastPlayedBoost'];
+
+    /**
+     * Works out the user's custom slider values from stored settings.
+     * Settings saved before custom values were stored separately only have
+     * them in the active boosts, and only while Custom is selected.
+     * @param {Object} data - Stored settings (CUSTOM_WEIGHT_KEYS)
+     * @returns {{newnessBoost: number, leastPlayedBoost: number}}
+     */
+    const resolveCustomWeights = (data) => {
+        const legacyCustom = data.weightMode === 'custom' ? data : {};
+        return {
+            newnessBoost: data.customNewnessBoost || legacyCustom.newnessBoost || 1,
+            leastPlayedBoost: data.customLeastPlayedBoost || legacyCustom.leastPlayedBoost || 1
+        };
     };
 
     // Load saved settings
     chrome.storage.sync.get(
-        ['debug', 'shortcutKey', 'preferredInstrument', 'weightMode', 'newnessBoost', 'leastPlayedBoost'],
+        ['debug', 'shortcutKey', 'preferredInstrument', ...CUSTOM_WEIGHT_KEYS],
         (data) => {
             if (!chrome.runtime.lastError) {
                 elements.debugToggle.checked = data.debug || false;
                 elements.currentKey.textContent = data.shortcutKey || '=';
                 setActiveInstrument(data.preferredInstrument || 'default');
-                applyWeightUI(
-                    data.weightMode || 'off',
-                    data.newnessBoost || 1,
-                    data.leastPlayedBoost || 1
-                );
+
+                customWeights = resolveCustomWeights(data);
+                applyWeightUI(data.weightMode || 'off');
+
+                // One-time migration: give older Custom settings their own keys
+                // so they outlive a later switch to a preset
+                if (data.weightMode === 'custom' && data.customNewnessBoost == null) {
+                    chrome.storage.sync.set({
+                        customNewnessBoost: customWeights.newnessBoost,
+                        customLeastPlayedBoost: customWeights.leastPlayedBoost
+                    });
+                }
             }
         }
     );
@@ -114,8 +167,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if ('leastPlayedBoost' in settings) {
             sanitizedSettings.leastPlayedBoost = clampBoost(settings.leastPlayedBoost, 1);
         }
+        if ('customNewnessBoost' in settings) {
+            sanitizedSettings.customNewnessBoost = clampBoost(settings.customNewnessBoost, 1);
+        }
+        if ('customLeastPlayedBoost' in settings) {
+            sanitizedSettings.customLeastPlayedBoost = clampBoost(settings.customLeastPlayedBoost, 1);
+        }
 
         chrome.storage.sync.set(sanitizedSettings, () => {
+            if (chrome.runtime.lastError) {
+                showSnackbar("Couldn't save change. Please try again.", true);
+                return;
+            }
+            showSnackbar('Change saved');
             if ('shortcutKey' in sanitizedSettings) {
                 elements.currentKey.textContent = sanitizedSettings.shortcutKey;
             }
@@ -136,20 +200,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Counts randomization selections, so a slow storage read for an earlier
+    // Custom click can't override a newer selection
+    let weightSelectionId = 0;
+
     // Randomization preset handler (segmented control)
     weightSegButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const mode = btn.dataset.value;
-            if (mode === 'custom') {
-                const newnessBoost = Number(elements.newnessSlider.value);
-                const leastPlayedBoost = Number(elements.leastPlayedSlider.value);
-                applyWeightUI('custom', newnessBoost, leastPlayedBoost);
-                saveSettings({ weightMode: 'custom', newnessBoost, leastPlayedBoost });
-            } else {
-                const preset = WEIGHT_PRESETS[mode];
-                applyWeightUI(mode, preset.newnessBoost, preset.leastPlayedBoost);
-                saveSettings({ weightMode: mode, ...preset });
+            const selectionId = ++weightSelectionId;
+
+            // Presets never touch the stored custom slider values
+            if (mode !== 'custom') {
+                applyWeightUI(mode);
+                saveSettings({ weightMode: mode, ...WEIGHT_PRESETS[mode] });
+                return;
             }
+
+            // Custom restores the user's own slider values. Read them fresh:
+            // the in-memory copy can be stale (settings open in another tab,
+            // or a click before the initial load finished).
+            chrome.storage.sync.get(CUSTOM_WEIGHT_KEYS, (data) => {
+                if (selectionId !== weightSelectionId) return; // superseded
+                if (!chrome.runtime.lastError) {
+                    customWeights = resolveCustomWeights(data);
+                }
+                applyWeightUI('custom');
+                saveSettings({ weightMode: 'custom', ...customWeights });
+            });
         });
     });
 
@@ -159,12 +237,16 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.leastPlayedValue.textContent = `${elements.leastPlayedSlider.value}×`;
     };
     const saveSliderValues = () => {
-        setActiveWeight('custom');
-        elements.customWeights.classList.add('show');
-        saveSettings({
-            weightMode: 'custom',
+        customWeights = {
             newnessBoost: Number(elements.newnessSlider.value),
             leastPlayedBoost: Number(elements.leastPlayedSlider.value)
+        };
+        applyWeightUI('custom');
+        saveSettings({
+            weightMode: 'custom',
+            ...customWeights,
+            customNewnessBoost: customWeights.newnessBoost,
+            customLeastPlayedBoost: customWeights.leastPlayedBoost
         });
     };
     elements.newnessSlider.addEventListener('input', updateSliderLabels);
