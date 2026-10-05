@@ -31,7 +31,9 @@ A Chrome extension that adds a random song picker to Songsterr.com. Play a rando
 - **🦊 Chrome and Firefox** - Same code base, separate Firefox package (Firefox 140+)
 
 ### User Experience
-- **Dismissible notifications** - Color-coded feedback (loading, success, error)
+- **Dismissible notifications** - Color-coded feedback (loading, success, error), shown top-center
+- **Settings at a glance** - Active randomization and instrument shown in the popup, the Random button tooltip, and the loading notification
+- **Instant saves** - Settings save as you change them, confirmed by a "Change saved" snackbar
 - **Adaptive UI** - Multiple fallback strategies for Songsterr's dynamic layout
 - **Settings persistence** - Preferences sync across devices via Chrome sync storage
 - **Real-time updates** - Settings changes apply immediately across all tabs

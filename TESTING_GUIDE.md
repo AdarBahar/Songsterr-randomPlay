@@ -31,7 +31,7 @@
 **Steps**:
 1. Go to https://www.songsterr.com (logged in with favorites)
 2. Click the Random button (or press shortcut)
-3. **Expected**: Orange notification appears in top-right saying "Loading favorites... ⏳"
+3. **Expected**: Orange notification appears top-center saying "Loading random song... ⏳", with the active settings underneath (e.g. "Randomization: Pure random | Instrument: Default")
 4. **Expected**: Notification dismisses when song loads
 5. Try again - notification should appear each time
 

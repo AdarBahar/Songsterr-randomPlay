@@ -200,10 +200,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Counts randomization selections, so a slow storage read for an earlier
+    // Custom click can't override a newer selection
+    let weightSelectionId = 0;
+
     // Randomization preset handler (segmented control)
     weightSegButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const mode = btn.dataset.value;
+            const selectionId = ++weightSelectionId;
 
             // Presets never touch the stored custom slider values
             if (mode !== 'custom') {
@@ -216,6 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // the in-memory copy can be stale (settings open in another tab,
             // or a click before the initial load finished).
             chrome.storage.sync.get(CUSTOM_WEIGHT_KEYS, (data) => {
+                if (selectionId !== weightSelectionId) return; // superseded
                 if (!chrome.runtime.lastError) {
                     customWeights = resolveCustomWeights(data);
                 }
