@@ -43,8 +43,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.action === 'getWeightSettings') {
-        chrome.storage.sync.get(['newnessBoost', 'leastPlayedBoost'], (data) => {
+        chrome.storage.sync.get(['weightMode', 'newnessBoost', 'leastPlayedBoost'], (data) => {
             sendResponse({
+                weightMode: data.weightMode || 'off',
                 newnessBoost: data.newnessBoost || 1,
                 leastPlayedBoost: data.leastPlayedBoost || 1
             });
@@ -71,6 +72,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         }
         if (changes.preferredInstrument) {
             settingsChanged.preferredInstrument = changes.preferredInstrument.newValue;
+        }
+        if (changes.weightMode) {
+            settingsChanged.weightMode = changes.weightMode.newValue;
         }
         if (changes.newnessBoost) {
             settingsChanged.newnessBoost = changes.newnessBoost.newValue;

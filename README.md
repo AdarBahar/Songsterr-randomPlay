@@ -206,6 +206,8 @@ See [deployment.md](.codeagent/current/deployment.md) for detailed deployment in
 - 🗂️ **Settings page layout** - Responsive card grid that uses the page width; fits one screen on desktop
 - ✅ **"Change saved" confirmation** - A snackbar confirms every settings change
 - 🎚️ **Custom sliders remembered** - Switching to a preset and back to Custom restores your slider values
+- 🧾 **Active settings at a glance** - Randomization and instrument shown in the popup, the Random button tooltip, and the loading notification
+- 📍 **Notifications centered** - On-page notifications now appear top-center instead of top-right
 - 🖼️ **Icons** - `icon16.png` is now a true 16px image; the old 32px file is `icon32.png`
 
 ### v1.5.0 (2026-06-17) - Instruments, Weighted Randomization & Redesign
