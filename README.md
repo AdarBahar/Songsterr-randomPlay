@@ -201,6 +201,11 @@ See [deployment.md](.codeagent/current/deployment.md) for detailed deployment in
 
 ## Version History
 
+### v1.6.1 (2026-10-08) - Songsterr Bottom Bar
+- 🔧 **New Songsterr layout** - Songsterr moved its navigation to a floating bottom bar; the Random button now joins that bar's main group, styled like the native items
+- 🎨 **No more "selected" look** - The button no longer inherits the active-tab highlight when it is cloned from the selected item
+- 🖼️ **Icon sized to the bar** - The icon now matches the size of Songsterr's own icons instead of overflowing its slot
+
 ### v1.6.0 (2026-10-04) - Firefox Support & Fixes
 - 🦊 **Firefox build** - `npm run compile:firefox` produces an AMO-ready package (event-page background, gecko add-on ID)
 - 🎲 **Repeat avoidance fixed** - Song history and the favorites cache now persist in `sessionStorage`; previously every play's page navigation wiped them

@@ -1,6 +1,6 @@
 {
   "name": "random-favorite-picker",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "scripts": {
     "sync-version": "node scripts/sync-version.js",
     "prebuild": "npm run sync-version",

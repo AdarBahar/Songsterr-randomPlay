@@ -4,6 +4,21 @@ Entries are added in reverse chronological order.
 
 ---
 
+## 2026-10-08: Songsterr Bottom Bar (v1.6.1)
+**Branch**: songsterr-bottom-bar
+**Status**: Fix simulated on the live site; needs a release to both stores
+
+Songsterr moved its navigation from a top bar to a floating bottom bar (`nav#tablist`, groups `bottomBarCenter` / `bottomBarRight`). With v1.6.0 the Random button still appeared, but as the nav's first child, cloned from the selected Search item (so it had the active highlight) and with a 40px icon overflowing the 22x20 icon slot. The keyboard shortcut kept working.
+
+**Fix (content.js)**:
+- Strategy 1 accepts `bottomBarCenter` as well as `topbarCenter` and appends the button to that group
+- Template is an inactive item; any `*Active*` class is stripped from the clone
+- Icon `foreignObject` sized to the template SVG's width/height attributes
+
+**Observation**: pressing the shortcut on the site also left `?pattern=%3D` in the URL, so Songsterr seems to read the same keypress. Worth watching for conflicts.
+
+---
+
 ## 2026-10-04: Firefox Support & Content-Script Fixes (v1.6.0)
 **Branch**: main
 **Status**: v1.6.0 tagged; submitted to AMO on 2026-10-05, approved and public on 2026-10-08 (https://addons.mozilla.org/firefox/addon/random-songsterr-extension/)

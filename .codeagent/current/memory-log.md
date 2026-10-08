@@ -16,6 +16,11 @@ Durable knowledge, decisions, patterns, "how we do things here", and gotchas.
 - Must match Songsterr's styling for seamless integration
 - Content scripts run in page context with access to DOM
 
+### Songsterr Layout History (keep updated)
+- **Until Oct 2026**: top bar `nav#tablist` with a `topbarCenter` group of `itemWrapper` divs
+- **Since Oct 2026 (v1.6.1)**: floating bottom bar, still `nav#tablist` (class `floatWide`; a `bottomBarNarrow` variant exists for small viewports, untested). Children: `a.item` (first), two `bottomBarCenter` groups, `bottomBarRight`. Items are `div.itemWrapper > a.item#menu-* > div.container.icon > svg(22x20) > use` + `div.text`. The selected tab has `aria-active="true"` and an `itemActive` class
+- Injection strategy 1 looks for `[class*="topbarCenter"], [class*="bottomBarCenter"]`, clones an *inactive* `itemWrapper`, strips any `*Active*` class, and sizes the icon's `foreignObject` to the SVG's width/height attributes. Cloning the active item used to give the button the selected highlight, and a fixed 40px icon overflowed the 22x20 slot
+
 ### Why Multiple Fallback Selectors + MutationObserver? (v1.4+)
 - Songsterr uses dynamically generated CSS class names (e.g., `Gl54yj`, `Fbh5d4`)
 - Class names may change with Songsterr updates or A/B tests
