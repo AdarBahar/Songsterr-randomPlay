@@ -67,6 +67,12 @@ const INSTRUMENT_TRACK_FIELD = {
     drums: 'popularTrackDrum'
 };
 
+/** How long the toolbar button shows its pressed (hover) look after the shortcut, in ms */
+const BUTTON_FLASH_MS = 600;
+
+/** Class that gives the toolbar button the same look as hovering it */
+const BUTTON_PRESSED_CLASS = 'random-song-pressed';
+
 /** Maximum song history size (to avoid repeats) */
 const MAX_SONG_HISTORY = 10;
 
@@ -340,15 +346,65 @@ const createRandomImage = (size) => {
 };
 
 /**
+ * Adds the styles for the button's pressed state once. Mirrors Songsterr's
+ * hover look on bottom-bar items: green icon pill, white icon, green label.
+ */
+const ensureButtonStyles = () => {
+    if (document.getElementById('random-song-button-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'random-song-button-styles';
+    style.textContent = `
+        #random-icon.${BUTTON_PRESSED_CLASS} [class*="icon"] {
+            background: var(--green-color-dark, #238c35) !important;
+            color: #fff !important;
+        }
+        #random-icon.${BUTTON_PRESSED_CLASS} [class*="text"] {
+            color: var(--green-color-dark, #238c35) !important;
+        }
+        #random-icon.${BUTTON_PRESSED_CLASS} img {
+            filter: brightness(10);
+        }
+    `;
+    document.head.appendChild(style);
+};
+
+/**
+ * Briefly shows the toolbar button in its hover look, so the keyboard
+ * shortcut gives the same visual feedback as clicking the button.
+ */
+const flashRandomButton = () => {
+    const button = document.getElementById('random-icon');
+    if (!button) return;
+    ensureButtonStyles();
+    button.classList.add(BUTTON_PRESSED_CLASS);
+    setTimeout(() => button.classList.remove(BUTTON_PRESSED_CLASS), BUTTON_FLASH_MS);
+};
+
+/**
+ * True when a nav item is rendered as the currently selected tab
+ * (Songsterr marks it with aria-active and a class containing "Active").
+ * @param {Element} item
+ * @returns {boolean}
+ */
+const isActiveNavItem = (item) =>
+    item.getAttribute('aria-active') === 'true' ||
+    [...item.classList].some(cls => /active/i.test(cls));
+
+/**
  * Creates the random song button for the Songsterr toolbar
  * Attempts to clone existing toolbar styling for consistency
  * @returns {HTMLElement|null} The created button element or null if creation fails
  */
 const createRandomButton = (templateButton = null) => {
-    // Strategy 1: Try to clone an existing toolbar item (best styling match)
-    const existingButtons = templateButton
+    // Strategy 1: Try to clone an existing toolbar item (best styling match).
+    // Prefer an inactive item so the clone doesn't inherit the "selected" look.
+    const candidates = templateButton
         ? [templateButton]
-        : document.querySelectorAll('a[class*="Gl5"], nav a, header a');
+        : [...document.querySelectorAll('a[class*="Gl5"], nav a, header a')];
+    const existingButtons = [
+        ...candidates.filter(item => !isActiveNavItem(item)),
+        ...candidates.filter(isActiveNavItem)
+    ];
 
     for (const existingButton of existingButtons) {
         if (existingButton.querySelector('svg') && existingButton.querySelector('div')) {
@@ -361,17 +417,31 @@ const createRandomButton = (templateButton = null) => {
                 button.setAttribute('aria-active', 'false');
                 button.title = getButtonTitle();
 
-                // Replace SVG content
+                // Never look like the selected tab, even when cloned from it
+                [...button.classList]
+                    .filter(cls => /active/i.test(cls))
+                    .forEach(cls => button.classList.remove(cls));
+
+                // Replace the SVG content with our icon, at the size the site
+                // draws its own icons (the SVG's width/height attributes)
                 const svg = button.querySelector('svg');
                 if (svg) {
-                    const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-                    foreignObject.setAttribute('width', '40');
-                    foreignObject.setAttribute('height', '40');
+                    const width = parseInt(svg.getAttribute('width'), 10) || 40;
+                    const height = parseInt(svg.getAttribute('height'), 10) || 40;
+                    const size = Math.min(width, height);
 
-                    const img = createRandomImage(40);
-                    img.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
+                    const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+                    foreignObject.setAttribute('x', String((width - size) / 2));
+                    foreignObject.setAttribute('y', String((height - size) / 2));
+                    foreignObject.setAttribute('width', String(size));
+                    foreignObject.setAttribute('height', String(size));
+
+                    const img = createRandomImage(size);
+                    img.style.cssText = 'display: block; width: 100%; height: 100%; object-fit: contain;';
                     foreignObject.appendChild(img);
 
+                    // Match the icon box to the attributes so the image isn't clipped
+                    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
                     svg.replaceChildren(foreignObject);
                 }
 
@@ -935,15 +1005,23 @@ const injectRandomButton = (toolbar) => {
     // Try multiple positioning strategies for best placement
     let inserted = false;
 
-    // Strategy 1: Inject into the Songsterr topbar action list
+    // Strategy 1: Inject into the Songsterr tab list's main item group.
+    // Songsterr has used a top bar ("topbarCenter") and, since Oct 2026, a
+    // floating bottom bar ("bottomBarCenter"); both hold items in
+    // "itemWrapper" divs.
     const tablist = toolbar.matches('nav#tablist')
         ? toolbar
         : toolbar.querySelector('nav#tablist') || document.querySelector('nav#tablist');
-    const topbarCenter = tablist?.querySelector('[class*="topbarCenter"]');
-    const templateWrapper = topbarCenter?.querySelector('[class*="itemWrapper"]');
+    const itemGroup = tablist?.querySelector('[class*="topbarCenter"], [class*="bottomBarCenter"]');
+    const wrappers = itemGroup ? [...itemGroup.querySelectorAll('[class*="itemWrapper"]')] : [];
+    // Clone an unselected item so the button doesn't inherit the active look
+    const templateWrapper = wrappers.find(w => {
+        const link = w.querySelector('a');
+        return link && !isActiveNavItem(link);
+    }) || wrappers[0];
     const templateButton = templateWrapper?.querySelector('a');
 
-    if (topbarCenter && templateWrapper && templateButton) {
+    if (itemGroup && templateWrapper && templateButton) {
         const randomButton = createRandomButton(templateButton);
         if (randomButton) {
             attachClickHandler(randomButton);
@@ -951,9 +1029,9 @@ const injectRandomButton = (toolbar) => {
             const randomWrapper = document.createElement('div');
             randomWrapper.className = templateWrapper.className;
             randomWrapper.appendChild(randomButton);
-            topbarCenter.appendChild(randomWrapper);
+            itemGroup.appendChild(randomWrapper);
 
-            logDebug('Random button inserted into nav#tablist topbar center');
+            logDebug('Random button inserted into nav#tablist item group');
             inserted = true;
         }
     }
@@ -1098,6 +1176,7 @@ const init = async () => {
             // Shift + key = force refresh (clear cache and history)
             if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 e.preventDefault();
+                flashRandomButton();
                 logDebug('Shift + shortcut key pressed: force refresh');
                 showNotification('Refreshing favorites and clearing history...', 'info', 1500);
                 playRandomSong(true); // Force refresh
@@ -1105,6 +1184,7 @@ const init = async () => {
             // Just the key (no modifiers) = normal random play
             else if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
                 e.preventDefault();
+                flashRandomButton();
                 logDebug('Shortcut key pressed:', currentShortcutKey);
                 playRandomSong();
             }
