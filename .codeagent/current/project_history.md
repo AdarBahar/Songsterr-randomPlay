@@ -5,8 +5,8 @@ Entries are added in reverse chronological order.
 ---
 
 ## 2026-10-08: Songsterr Bottom Bar (v1.6.1)
-**Branch**: songsterr-bottom-bar
-**Status**: Fix simulated on the live site; needs a release to both stores
+**Branch**: songsterr-bottom-bar (PR #5, merged)
+**Status**: v1.6.1 tagged and submitted to the Chrome Web Store and Firefox Add-ons on 2026-10-08 (pending review); GitHub releases published for v1.6.0 and v1.6.1
 
 Songsterr moved its navigation from a top bar to a floating bottom bar (`nav#tablist`, groups `bottomBarCenter` / `bottomBarRight`). With v1.6.0 the Random button still appeared, but as the nav's first child, cloned from the selected Search item (so it had the active highlight) and with a 40px icon overflowing the 22x20 icon slot. The keyboard shortcut kept working.
 

@@ -110,6 +110,16 @@ npm run zip
 # Creates extension.zip in project root
 ```
 
+### GitHub Release (every version)
+
+After tagging, publish a GitHub release so the Releases page shows the newest version (the tag alone doesn't):
+
+```bash
+gh release create vX.Y.Z --title "vX.Y.Z — <summary>" --notes-file <notes.md> extension.zip extension-firefox.zip
+```
+
+Attach both store zips. Release notes follow the README version-history entry.
+
 ### Firefox Add-ons (AMO) Submission
 
 1. **Build and package**

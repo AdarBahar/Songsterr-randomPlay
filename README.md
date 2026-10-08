@@ -155,7 +155,8 @@ npm run compile
 ### Releasing a New Version
 1. Bump `version` in `manifest.json` and `package.json`.
 2. Run `npm run compile` and `npm run compile:firefox`. Every build first runs `scripts/sync-version.js`, which stamps the manifest version into the landing page footers (`landing/index.html`, `landing/privacy.html`).
-3. Commit, tag (`vX.Y.Z`), upload the zips to the stores, and deploy `landing/` so the live site shows the new version.
+3. Commit, tag (`vX.Y.Z`), and publish a GitHub release for the tag with both zips attached (`gh release create`).
+4. Upload the zips to the stores, and deploy `landing/` so the live site shows the new version.
 
 ### Build Output
 - **Directory**: `dist/`
