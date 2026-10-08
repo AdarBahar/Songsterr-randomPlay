@@ -67,6 +67,12 @@ const INSTRUMENT_TRACK_FIELD = {
     drums: 'popularTrackDrum'
 };
 
+/** How long the toolbar button shows its pressed (hover) look after the shortcut, in ms */
+const BUTTON_FLASH_MS = 600;
+
+/** Class that gives the toolbar button the same look as hovering it */
+const BUTTON_PRESSED_CLASS = 'random-song-pressed';
+
 /** Maximum song history size (to avoid repeats) */
 const MAX_SONG_HISTORY = 10;
 
@@ -337,6 +343,41 @@ const createRandomImage = (size) => {
     img.width = size;
     img.height = size;
     return img;
+};
+
+/**
+ * Adds the styles for the button's pressed state once. Mirrors Songsterr's
+ * hover look on bottom-bar items: green icon pill, white icon, green label.
+ */
+const ensureButtonStyles = () => {
+    if (document.getElementById('random-song-button-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'random-song-button-styles';
+    style.textContent = `
+        #random-icon.${BUTTON_PRESSED_CLASS} [class*="icon"] {
+            background: var(--green-color-dark, #238c35) !important;
+            color: #fff !important;
+        }
+        #random-icon.${BUTTON_PRESSED_CLASS} [class*="text"] {
+            color: var(--green-color-dark, #238c35) !important;
+        }
+        #random-icon.${BUTTON_PRESSED_CLASS} img {
+            filter: brightness(10);
+        }
+    `;
+    document.head.appendChild(style);
+};
+
+/**
+ * Briefly shows the toolbar button in its hover look, so the keyboard
+ * shortcut gives the same visual feedback as clicking the button.
+ */
+const flashRandomButton = () => {
+    const button = document.getElementById('random-icon');
+    if (!button) return;
+    ensureButtonStyles();
+    button.classList.add(BUTTON_PRESSED_CLASS);
+    setTimeout(() => button.classList.remove(BUTTON_PRESSED_CLASS), BUTTON_FLASH_MS);
 };
 
 /**
@@ -1135,6 +1176,7 @@ const init = async () => {
             // Shift + key = force refresh (clear cache and history)
             if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 e.preventDefault();
+                flashRandomButton();
                 logDebug('Shift + shortcut key pressed: force refresh');
                 showNotification('Refreshing favorites and clearing history...', 'info', 1500);
                 playRandomSong(true); // Force refresh
@@ -1142,6 +1184,7 @@ const init = async () => {
             // Just the key (no modifiers) = normal random play
             else if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
                 e.preventDefault();
+                flashRandomButton();
                 logDebug('Shortcut key pressed:', currentShortcutKey);
                 playRandomSong();
             }
