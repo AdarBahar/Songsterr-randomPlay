@@ -202,6 +202,11 @@ See [deployment.md](.codeagent/current/deployment.md) for detailed deployment in
 
 ## Version History
 
+### v1.6.2 (2026-10-26) - Inbox Badge Fix
+- 🔧 **Badge clone fixed** - Songsterr added an unread-count badge to the Inbox item; the cloned button showed "Random" in the badge and kept the "Inbox" label
+- 🧭 **Better template choice** - The clone template is now a badge-free, inactive toolbar item
+- 🏷️ **Label targeting** - The label update now writes to the site's text div, with the old text-div scan as a fallback
+
 ### v1.6.1 (2026-10-08) - Songsterr Bottom Bar
 - 🔧 **New Songsterr layout** - Songsterr moved its navigation to a floating bottom bar; the Random button now joins that bar's main group, styled like the native items
 - 🎨 **No more "selected" look** - The button no longer inherits the active-tab highlight when it is cloned from the selected item

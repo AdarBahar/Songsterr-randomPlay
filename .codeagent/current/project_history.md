@@ -4,6 +4,19 @@ Entries are added in reverse chronological order.
 
 ---
 
+## 2026-10-26: Inbox Badge Clone Fix (v1.6.2)
+**Branch**: toolbar-badge-fix (PR #7, merged)
+**Status**: v1.6.2 tagged; GitHub release published with both zips; store uploads pending
+
+Songsterr added an unread-count badge (`_6cSL6a_badge`) to the Inbox bottom-bar item. The clone template became the Inbox item. The old code wrote "Random" into the first text-only div, which was now the badge, and kept the "Inbox" label.
+
+**Fix (content.js)**:
+- The template choice prefers an inactive item without a `[class*="badge"]` element
+- The clone drops any inherited badge element
+- The label update targets the site's `div[class*="text"]`; the old first-text-div scan stays as a fallback
+
+---
+
 ## 2026-10-08: Songsterr Bottom Bar (v1.6.1)
 **Branch**: songsterr-bottom-bar (PR #5, merged)
 **Status**: v1.6.1 tagged and submitted to the Chrome Web Store and Firefox Add-ons on 2026-10-08 (pending review); GitHub releases published for v1.6.0 and v1.6.1
