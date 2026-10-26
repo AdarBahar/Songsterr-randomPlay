@@ -422,6 +422,10 @@ const createRandomButton = (templateButton = null) => {
                     .filter(cls => /active/i.test(cls))
                     .forEach(cls => button.classList.remove(cls));
 
+                // Drop notification badges inherited from the template
+                // (e.g. the Inbox unread-count bubble)
+                button.querySelectorAll('[class*="badge" i]').forEach(el => el.remove());
+
                 // Replace the SVG content with our icon, at the size the site
                 // draws its own icons (the SVG's width/height attributes)
                 const svg = button.querySelector('svg');
@@ -445,12 +449,18 @@ const createRandomButton = (templateButton = null) => {
                     svg.replaceChildren(foreignObject);
                 }
 
-                // Update text (find any text-containing div)
-                const textDivs = button.querySelectorAll('div');
-                for (const div of textDivs) {
-                    if (div.textContent && div.textContent.trim() && !div.querySelector('svg, img')) {
-                        div.textContent = 'Random';
-                        break;
+                // Update text: prefer the site's label div (class contains
+                // "text"), else fall back to the first text-only div
+                const labelDiv = button.querySelector('div[class*="text" i]');
+                if (labelDiv) {
+                    labelDiv.textContent = 'Random';
+                } else {
+                    const textDivs = button.querySelectorAll('div');
+                    for (const div of textDivs) {
+                        if (div.textContent && div.textContent.trim() && !div.querySelector('svg, img')) {
+                            div.textContent = 'Random';
+                            break;
+                        }
                     }
                 }
 
@@ -1014,8 +1024,12 @@ const injectRandomButton = (toolbar) => {
         : toolbar.querySelector('nav#tablist') || document.querySelector('nav#tablist');
     const itemGroup = tablist?.querySelector('[class*="topbarCenter"], [class*="bottomBarCenter"]');
     const wrappers = itemGroup ? [...itemGroup.querySelectorAll('[class*="itemWrapper"]')] : [];
-    // Clone an unselected item so the button doesn't inherit the active look
+    // Clone an unselected item so the button doesn't inherit the active look.
+    // Prefer an item without a notification badge (e.g. not Inbox).
     const templateWrapper = wrappers.find(w => {
+        const link = w.querySelector('a');
+        return link && !isActiveNavItem(link) && !link.querySelector('[class*="badge" i]');
+    }) || wrappers.find(w => {
         const link = w.querySelector('a');
         return link && !isActiveNavItem(link);
     }) || wrappers[0];
