@@ -11,7 +11,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 
 /** Pages that show the version as <span class="ver">vX.Y.Z</span> */
-const PAGES = ['landing/index.html', 'landing/privacy.html'];
+const PAGES = ['landing/index.html', 'landing/privacy.html', 'landing/changelog.html'];
 
 const VERSION_SPAN = /(<span class="ver">)v[^<]*(<\/span>)/g;
 

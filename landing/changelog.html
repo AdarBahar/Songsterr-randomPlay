@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog — Random Favorite Picker for Songsterr</title>
+<meta name="description" content="Version history for the Random Favorite Picker browser extension (Chrome and Firefox) for Songsterr.">
+<link rel="icon" type="image/png" href="assets/img/icon128.png">
+<style>
+  @font-face { font-family:'Hanken Grotesk'; src:url('assets/fonts/HankenGrotesk.woff2') format('woff2'); font-weight:100 900; font-display:swap; }
+  @font-face { font-family:'Space Mono'; src:url('assets/fonts/SpaceMono.woff2') format('woff2'); font-weight:400; font-display:swap; }
+
+  :root {
+    --bg:#0d0d0f; --s1:#161619; --s2:#1e1e22; --border:rgba(255,255,255,0.08);
+    --text:#fafafa; --dim:#e3e3e9; --mute:#a7a7b4; --accent:#4d8dff; --accent2:#6aa0ff; --glow:rgba(77,141,255,0.35);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.65; -webkit-font-smoothing:antialiased;
+    padding:48px 20px 80px; position:relative;
+  }
+  body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:radial-gradient(60% 40% at 50% -8%, rgba(77,141,255,0.16), transparent 60%); }
+  .wrap { max-width:760px; margin:0 auto; }
+
+  .top { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+  .eq { display:inline-flex; align-items:flex-end; gap:3px; height:26px; width:26px; }
+  .eq i { flex:1; border-radius:2px; background:linear-gradient(180deg,var(--accent2),var(--accent)); box-shadow:0 0 8px var(--glow); }
+  .top a { color:var(--mute); font-weight:600; font-size:14px; text-decoration:none; margin-left:auto; }
+  .top a:hover { color:var(--accent); }
+
+  header.title { border-bottom:1px solid var(--border); padding-bottom:22px; margin-bottom:28px; }
+  h1 { font-size:36px; font-weight:800; letter-spacing:-1px; }
+  .subtitle { color:var(--mute); font-size:15px; margin-top:6px; }
+
+  .card { background:linear-gradient(180deg,var(--s2),var(--s1)); border:1px solid var(--border);
+    border-radius:14px; padding:22px 26px; margin-bottom:16px; }
+  .vhead { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+  .vhead h2 { font-size:20px; font-weight:700; color:var(--accent2); font-family:'Space Mono',monospace; }
+  .vhead .date { color:var(--mute); font-size:13px; font-family:'Space Mono',monospace; }
+  .vhead .chip { font-size:11.5px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase;
+    color:#0a1426; background:linear-gradient(180deg,var(--accent2),var(--accent));
+    border-radius:999px; padding:2px 10px; }
+  h3.vname { font-size:16px; font-weight:700; color:var(--text); margin-bottom:10px; }
+  ul { margin:6px 0 0; padding-left:22px; color:var(--dim); }
+  li { margin-bottom:6px; }
+  li::marker { color:var(--accent2); }
+  strong { color:#fff; font-weight:600; }
+  a { color:var(--accent2); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  code { font-family:'Space Mono',monospace; font-size:13px; background:rgba(255,255,255,0.06);
+    border:1px solid var(--border); border-radius:5px; padding:1px 6px; color:var(--text); }
+
+  .foot { text-align:center; color:var(--mute); font-size:13px; margin-top:30px; }
+  .foot a { color:var(--mute); }
+  .foot a:hover { color:var(--accent); }
+  .foot .ver { font-family:'Space Mono',monospace; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <span class="eq"><i style="height:55%"></i><i style="height:100%"></i><i style="height:40%"></i><i style="height:78%"></i></span>
+      <strong>Random Favorite Picker</strong>
+      <a href="index.html">← Back to site</a>
+    </div>
+
+    <header class="title">
+      <h1>Changelog</h1>
+      <div class="subtitle">What changed in each version of the extension. Full release notes and downloads live on <a href="https://github.com/AdarBahar/Songsterr-randomPlay/releases" target="_blank" rel="noopener">GitHub Releases</a>.</div>
+    </header>
+
+    <div class="card">
+      <div class="vhead"><h2>v1.6.2</h2><span class="date">2026-10-26</span><span class="chip">Latest</span></div>
+      <h3 class="vname">Inbox Badge Fix</h3>
+      <ul>
+        <li>🔧 <strong>Badge mix-up fixed</strong> — Songsterr added an unread-count badge to the toolbar's Inbox item; the Random button briefly showed "Random" in a red badge over an "Inbox" label</li>
+        <li>🏷️ <strong>Correct label and icon</strong> — the button again shows the shuffle icon with the "Random" label, with no badge</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="vhead"><h2>v1.6.1</h2><span class="date">2026-10-08</span></div>
+      <h3 class="vname">Songsterr Bottom Bar</h3>
+      <ul>
+        <li>🔧 <strong>New Songsterr layout</strong> — Songsterr moved its navigation to a floating bottom bar; the Random button now joins that bar, styled like the native items</li>
+        <li>🎨 <strong>No more "selected" look</strong> — the button no longer inherits the active-tab highlight</li>
+        <li>⌨️ <strong>Shortcut feedback</strong> — pressing the shortcut key flashes the Random button with the same green look as hovering it</li>
+        <li>🖼️ <strong>Icon sized to the bar</strong> — the icon now matches the size of Songsterr's own icons</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="vhead"><h2>v1.6.0</h2><span class="date">2026-10-04</span></div>
+      <h3 class="vname">Firefox Support &amp; Fixes</h3>
+      <ul>
+        <li>🦊 <strong>Firefox version</strong> — the extension is now on <a href="https://addons.mozilla.org/firefox/addon/random-songsterr-extension/" target="_blank" rel="noopener">Firefox Add-ons</a> (Firefox 140+)</li>
+        <li>🎲 <strong>Repeat avoidance fixed</strong> — song history and the favorites cache now survive each play's page navigation</li>
+        <li>⌨️ <strong>Shift + shortcut fixed</strong> — force refresh now works for symbol and letter keys</li>
+        <li>🔍 <strong>Button re-injection</strong> — the button comes back after Songsterr re-renders its toolbar</li>
+        <li>⚙️ <strong>Settings fixes</strong> — changing one setting no longer risks reverting another; a snackbar confirms every save; custom slider values survive preset switches</li>
+        <li>🧾 <strong>Active settings at a glance</strong> — randomization and instrument shown in the popup, the button tooltip, and the loading notification</li>
+        <li>⚖️ <strong>Fairer shuffle</strong> — no immediate repeats in small libraries; favorites with identical dates get equal odds</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="vhead"><h2>v1.5.0</h2><span class="date">2026-06-17</span></div>
+      <h3 class="vname">Instruments, Weighted Randomization &amp; Redesign</h3>
+      <ul>
+        <li>🎯 <strong>Preferred instrument</strong> — open the Guitar, Bass, or Drums track when available, else the default track</li>
+        <li>🎲 <strong>Weighted randomization</strong> — favor newly added and/or least-played favorites, with presets and custom sliders</li>
+        <li>🗂️ <strong>Full settings page</strong> — a dedicated options tab; the popup slimmed to a launcher</li>
+        <li>🎨 <strong>Redesigned UI</strong> — dark theme, bundled fonts, segmented controls, animated equalizer</li>
+        <li>🔌 <strong>Sturdier favorites</strong> — favorites now come from Songsterr's JSON API instead of page scraping</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="vhead"><h2>v1.4.1</h2><span class="date">2026-01-06</span></div>
+      <h3 class="vname">Chrome Web Store Submission</h3>
+      <ul>
+        <li>🏪 <strong>Chrome Web Store release</strong> — screenshots, privacy policy, and metadata finalized; submitted to the store</li>
+        <li>🎨 <strong>Popup refinements</strong> — cleaner header, fixed scrollbars, restored font sizes, scrollable settings panel</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="vhead"><h2>v1.4.0</h2><span class="date">2026-01-06</span></div>
+      <h3 class="vname">Code Quality &amp; Features</h3>
+      <ul>
+        <li>🎲 <strong>Song history</strong> — skips the last 10 songs you played, for better variety</li>
+        <li>⚡ <strong>Force refresh</strong> — Shift + shortcut clears the cache and the history</li>
+        <li>🧹 <strong>Cache clear button</strong> — manual control in the settings</li>
+        <li>🔍 <strong>Dynamic toolbar detection</strong> — the button follows Songsterr's single-page app rendering</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="vhead"><h2>v1.3.0</h2><span class="date">2026-01-06</span></div>
+      <h3 class="vname">Performance &amp; UX</h3>
+      <ul>
+        <li>⚡ <strong>Favorites caching</strong> — repeat clicks pick a song instantly (60-second cache)</li>
+        <li>🔄 <strong>Loading notification</strong> — visual feedback while the next song loads</li>
+        <li>✨ <strong>Smooth animations</strong> — for the options panel</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="vhead"><h2>v1.2.1</h2><span class="date">2026-01-06</span></div>
+      <h3 class="vname">Bug Fixes</h3>
+      <ul>
+        <li>🐛 The keyboard shortcut no longer fires while you type in input fields</li>
+        <li>🐛 Error notifications appear reliably; the tooltip updates dynamically; modifier keys no longer trigger the shortcut</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="vhead"><h2>v1.2.0</h2></div>
+      <h3 class="vname">Initial Release</h3>
+      <ul>
+        <li>🎉 First public release on the Chrome Web Store</li>
+        <li>✅ Random song selection from your favorites, keyboard shortcut, settings panel</li>
+      </ul>
+    </div>
+
+    <div class="foot">&copy; <span id="year"></span> Adar Bahar · <span class="ver">v1.6.2</span> ·
+      <a href="https://chromewebstore.google.com/detail/random-song-songsterr-ext/iieohhnmhcmnchcefjjlfdmobhmoaobe" target="_blank" rel="noopener">Chrome Web Store</a> ·
+      <a href="https://addons.mozilla.org/firefox/addon/random-songsterr-extension/" target="_blank" rel="noopener">Firefox Add-ons</a> ·
+      <a href="https://github.com/AdarBahar/Songsterr-randomPlay" target="_blank" rel="noopener">GitHub</a> ·
+      <a href="privacy.html">Privacy</a> ·
+      <a href="index.html">Home</a>
+    </div>
+  </div>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
