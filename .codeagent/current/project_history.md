@@ -6,7 +6,7 @@ Entries are added in reverse chronological order.
 
 ## 2026-10-26: Inbox Badge Clone Fix (v1.6.2)
 **Branch**: toolbar-badge-fix (PR #7, merged)
-**Status**: v1.6.2 tagged; GitHub release published with both zips; submitted to the Chrome Web Store and Firefox Add-ons 2026-10-26 (pending review); landing deployed to bahar.co.il 2026-10-26 (live site shows v1.6.2)
+**Status**: v1.6.2 tagged; GitHub release published with both zips; submitted to the Chrome Web Store and Firefox Add-ons 2026-10-26; Firefox approved the same day, Chrome review pending; landing deployed to bahar.co.il 2026-10-26 (live site shows v1.6.2)
 
 **Landing (PR #8, merged)**: new `landing/changelog.html` with the version history in the landing style; "Changelog" links in the index and privacy footers; the index footer version number links to the page; `sync-version.js` stamps the new page too.
 
