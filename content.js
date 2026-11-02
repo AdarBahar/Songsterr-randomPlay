@@ -103,6 +103,27 @@ const SHIFTED_KEYS = {
 /** Songsterr JSON endpoint returning the user's favorites */
 const FAVORITES_API_URL = 'https://www.songsterr.com/api/favorites';
 
+/** Give up on the favorites request after this long, in milliseconds */
+const FAVORITES_TIMEOUT_MS = 10000;
+
+/**
+ * Keys the browser or the page needs for itself. A shortcut on one of these
+ * would block that key on every Songsterr page (F5 would stop browser refresh),
+ * so such keys are never used as the shortcut. Keep in sync with options.js.
+ */
+const RESERVED_SHORTCUT_KEY_PATTERN = /^(F\d{1,2}|Escape|Tab|Enter|Backspace|Delete|Insert|Home|End|PageUp|PageDown|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|PrintScreen|Pause|ContextMenu|Shift|Control|Alt|Meta|CapsLock|NumLock|ScrollLock)$/;
+
+/**
+ * Returns the stored shortcut if it can be used, otherwise the default.
+ * Covers values saved before reserved keys were blocked (e.g. F5).
+ * @param {any} key - Stored shortcut key
+ * @returns {string}
+ */
+const usableShortcutKey = (key) =>
+    (typeof key === 'string' && key.length > 0 && key.length <= 20 && !RESERVED_SHORTCUT_KEY_PATTERN.test(key))
+        ? key
+        : DEFAULT_SHORTCUT_KEY;
+
 /** Base path for a canonical Songsterr tab URL */
 const SONG_BASE_URL = 'https://www.songsterr.com/a/wsa/';
 
@@ -157,6 +178,13 @@ let songHistory = [];
  * @type {Array<Object>}
  */
 let activeNotifications = [];
+
+/**
+ * True while a random pick is in progress (from the keypress or click until
+ * the page navigates away). Stops repeated picks from stacking up.
+ * @type {boolean}
+ */
+let isPicking = false;
 
 /**
  * Logs debug messages to console when debug mode is enabled
@@ -606,22 +634,37 @@ const fetchFavorites = async () => {
     }
 
     logDebug('Fetching fresh favorites from API...');
-    const response = await fetch(FAVORITES_API_URL, {
-        credentials: 'same-origin',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FAVORITES_TIMEOUT_MS);
 
-    if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-            throw new Error('AUTH_REQUIRED');
-        } else {
-            throw new Error(`HTTP_ERROR_${response.status}`);
+    let data;
+    try {
+        const response = await fetch(FAVORITES_API_URL, {
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            signal: controller.signal
+        });
+
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                throw new Error('AUTH_REQUIRED');
+            } else {
+                throw new Error(`HTTP_ERROR_${response.status}`);
+            }
         }
+
+        data = await response.json();
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('TIMEOUT');
+        }
+        throw error;
+    } finally {
+        clearTimeout(timeoutId);
     }
 
-    const data = await response.json();
     const allFavorites = Array.isArray(data)
         ? data
         : (data.favorites || data.items || data.results || []);
@@ -799,6 +842,22 @@ const selectRandomSong = (favoriteSongs) => {
  * @returns {Promise<void>}
  */
 const playRandomSong = async (forceRefresh = false) => {
+    // One pick at a time: auto-repeat, double presses or repeated clicks would
+    // otherwise navigate several times and fill the history with songs that
+    // were never shown.
+    if (isPicking) {
+        logDebug('A random pick is already in progress, ignoring');
+        return;
+    }
+    isPicking = true;
+
+    // Stays true once the page is navigating away, so no second pick starts
+    let navigating = false;
+
+    if (forceRefresh) {
+        showNotification('Refreshing favorites and clearing history...', 'info', 1500);
+    }
+
     // Show loading notification
     const loadingNotification = showNotification('Loading random song...', 'loading', 0, getSettingsSummary());
 
@@ -831,13 +890,17 @@ const playRandomSong = async (forceRefresh = false) => {
         addToSongHistory(randomSong.songId);
 
         logDebug('Navigating to random song:', songUrl);
+        navigating = true;
         window.location.href = songUrl;
 
     } catch (error) {
-        if (error.message === 'AUTH_REQUIRED') {
+        const message = error?.message || '';
+        if (message === 'AUTH_REQUIRED') {
             showNotification('Please log in to Songsterr to use this feature', 'error');
-        } else if (error.message.startsWith('HTTP_ERROR_')) {
-            const status = error.message.replace('HTTP_ERROR_', '');
+        } else if (message === 'TIMEOUT') {
+            showNotification('Songsterr took too long to respond. Please try again.', 'error');
+        } else if (message.startsWith('HTTP_ERROR_')) {
+            const status = message.replace('HTTP_ERROR_', '');
             showNotification(`Failed to fetch favorites (Error ${status})`, 'error');
         } else {
             showNotification('Failed to load favorites. Please try again.', 'error');
@@ -848,6 +911,11 @@ const playRandomSong = async (forceRefresh = false) => {
         // Dismiss the loading notification. On the success path this triggers
         // its slide-out just before the page navigates away.
         loadingNotification.dismiss();
+
+        // Release the lock unless the page is navigating away
+        if (!navigating) {
+            isPicking = false;
+        }
     }
 };
 
@@ -859,40 +927,28 @@ const playRandomSong = async (forceRefresh = false) => {
  */
 const initializeSettings = async () => {
     try {
-        const [shortcutResponse, debugResponse, instrumentResponse, weightResponse] = await Promise.all([
-            chrome.runtime.sendMessage({ action: 'getShortcutKey' }),
-            chrome.runtime.sendMessage({ action: 'getDebugMode' }),
-            chrome.runtime.sendMessage({ action: 'getPreferredInstrument' }),
-            chrome.runtime.sendMessage({ action: 'getWeightSettings' })
-        ]);
+        // One round trip for every setting; the defaults stay in place if it fails
+        const settings = await chrome.runtime.sendMessage({ action: 'getSettings' });
+        if (!settings) return;
 
-        if (shortcutResponse && shortcutResponse.shortcutKey) {
-            currentShortcutKey = shortcutResponse.shortcutKey;
-            logDebug('Shortcut key initialized:', currentShortcutKey);
+        isDebugMode = Boolean(settings.debug);
+        currentShortcutKey = usableShortcutKey(settings.shortcutKey);
+        preferredInstrument = settings.preferredInstrument || DEFAULT_PREFERRED_INSTRUMENT;
+        weightMode = settings.weightMode || DEFAULT_WEIGHT_MODE;
+        if (typeof settings.newnessBoost === 'number') {
+            newnessBoost = settings.newnessBoost;
+        }
+        if (typeof settings.leastPlayedBoost === 'number') {
+            leastPlayedBoost = settings.leastPlayedBoost;
         }
 
-        if (debugResponse && typeof debugResponse.debug !== 'undefined') {
-            isDebugMode = debugResponse.debug;
-            logDebug('Debug mode initialized:', isDebugMode);
-        }
-
-        if (instrumentResponse && instrumentResponse.preferredInstrument) {
-            preferredInstrument = instrumentResponse.preferredInstrument;
-            logDebug('Preferred instrument initialized:', preferredInstrument);
-        }
-
-        if (weightResponse) {
-            if (weightResponse.weightMode) {
-                weightMode = weightResponse.weightMode;
-            }
-            if (typeof weightResponse.newnessBoost === 'number') {
-                newnessBoost = weightResponse.newnessBoost;
-            }
-            if (typeof weightResponse.leastPlayedBoost === 'number') {
-                leastPlayedBoost = weightResponse.leastPlayedBoost;
-            }
-            logDebug('Weighting initialized: newness', newnessBoost, 'leastPlayed', leastPlayedBoost);
-        }
+        logDebug('Settings initialized:', {
+            shortcutKey: currentShortcutKey,
+            preferredInstrument,
+            weightMode,
+            newnessBoost,
+            leastPlayedBoost
+        });
     } catch (error) {
         console.error('Error initializing settings:', error);
     }
@@ -902,7 +958,7 @@ const initializeSettings = async () => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'settingsChanged' && message.settings) {
         if (typeof message.settings.shortcutKey !== 'undefined') {
-            currentShortcutKey = message.settings.shortcutKey;
+            currentShortcutKey = usableShortcutKey(message.settings.shortcutKey);
             logDebug('Shortcut key updated to:', currentShortcutKey);
         }
         if (typeof message.settings.debug !== 'undefined') {
@@ -1003,7 +1059,6 @@ const injectRandomButton = (toolbar) => {
             // Check for Shift modifier on click too
             if (e.shiftKey) {
                 logDebug('Shift + Random button clicked: force refresh');
-                showNotification('Refreshing favorites and clearing history...', 'info', 1500);
                 playRandomSong(true); // Force refresh
             } else {
                 logDebug('Random button clicked');
@@ -1170,10 +1225,12 @@ const matchesShortcutKey = (e) => {
  * @returns {Promise<void>}
  */
 const init = async () => {
-    await initializeSettings();
+    // Session state is read synchronously, so the first keypress already sees
+    // the recent-song history and cache
     restoreSessionState();
 
-    // Set up keyboard shortcut regardless of whether UI button can be added
+    // Attach the shortcut before the settings request, so it works (with the
+    // default key) even if that request is slow or fails
     document.addEventListener('keydown', (e) => {
         // Don't trigger shortcut when user is typing in input fields
         const activeElement = document.activeElement;
@@ -1187,12 +1244,17 @@ const init = async () => {
 
         // Check if the shortcut key is pressed
         if (matchesShortcutKey(e)) {
+            // Holding the key sends repeated keydown events: never pick on those
+            if (e.repeat) {
+                e.preventDefault();
+                return;
+            }
+
             // Shift + key = force refresh (clear cache and history)
             if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 e.preventDefault();
                 flashRandomButton();
                 logDebug('Shift + shortcut key pressed: force refresh');
-                showNotification('Refreshing favorites and clearing history...', 'info', 1500);
                 playRandomSong(true); // Force refresh
             }
             // Just the key (no modifiers) = normal random play
@@ -1205,6 +1267,10 @@ const init = async () => {
             // Other modifier combinations are ignored to avoid conflicts
         }
     });
+
+    // Load the saved settings. The button's tooltip depends on them, so the
+    // toolbar is set up after this.
+    await initializeSettings();
 
     // Try to find and inject button into toolbar
     const toolbar = findToolbar();
