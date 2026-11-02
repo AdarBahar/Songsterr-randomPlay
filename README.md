@@ -202,6 +202,14 @@ See [deployment.md](.codeagent/current/deployment.md) for detailed deployment in
 
 ## Version History
 
+### v1.6.3 (2026-11-02) - Repeat Pick & Shortcut Fixes
+- 🎲 **Repeat picks fixed** - A held key or a repeated click starts one pick only
+- 🔓 **Stuck lock fixed** - If the song page does not open, the next press works again and an error appears
+- ⏱️ **Request timeout** - The favorites request stops after 10 seconds and shows a message
+- ⌨️ **Reserved keys blocked** - Keys such as F5, Escape, and Tab cannot be the shortcut; a saved reserved key uses `=` instead
+- ↩️ **Back button fixed** - After the browser restores a page with Back, the next press works
+- 🚀 **Faster startup** - The shortcut works before the saved settings load
+
 ### v1.6.2 (2026-10-26) - Inbox Badge Fix
 - 🔧 **Badge clone fixed** - Songsterr added an unread-count badge to the Inbox item; the cloned button showed "Random" in the badge and kept the "Inbox" label
 - 🧭 **Better template choice** - The clone template is now a badge-free, inactive toolbar item
