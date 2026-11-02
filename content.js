@@ -107,6 +107,13 @@ const FAVORITES_API_URL = 'https://www.songsterr.com/api/favorites';
 const FAVORITES_TIMEOUT_MS = 10000;
 
 /**
+ * If the page is still showing this long after a random navigation started, the
+ * navigation was cancelled or blocked. The pick lock is then released. In
+ * milliseconds.
+ */
+const NAVIGATION_TIMEOUT_MS = 8000;
+
+/**
  * Keys the browser or the page needs for itself. A shortcut on one of these
  * would block that key on every Songsterr page (F5 would stop browser refresh),
  * so such keys are never used as the shortcut. Keep in sync with options.js.
@@ -185,6 +192,20 @@ let activeNotifications = [];
  * @type {boolean}
  */
 let isPicking = false;
+
+/** @type {number|null} Timer that releases the lock if the navigation never happens */
+let navigationWatchdog = null;
+
+/**
+ * Releases the pick lock and cancels the navigation watchdog.
+ */
+const releasePickLock = () => {
+    if (navigationWatchdog) {
+        clearTimeout(navigationWatchdog);
+        navigationWatchdog = null;
+    }
+    isPicking = false;
+};
 
 /**
  * Logs debug messages to console when debug mode is enabled
@@ -893,6 +914,14 @@ const playRandomSong = async (forceRefresh = false) => {
         navigating = true;
         window.location.href = songUrl;
 
+        // If this page is still here after a while, the navigation was cancelled
+        // or blocked: release the lock so the next press works, and say so.
+        navigationWatchdog = setTimeout(() => {
+            navigationWatchdog = null;
+            releasePickLock();
+            showNotification("Couldn't open the song. Please try again.", 'error');
+        }, NAVIGATION_TIMEOUT_MS);
+
     } catch (error) {
         const message = error?.message || '';
         if (message === 'AUTH_REQUIRED') {
@@ -914,7 +943,7 @@ const playRandomSong = async (forceRefresh = false) => {
 
         // Release the lock unless the page is navigating away
         if (!navigating) {
-            isPicking = false;
+            releasePickLock();
         }
     }
 };
@@ -1229,6 +1258,15 @@ const init = async () => {
     // the recent-song history and cache
     restoreSessionState();
 
+    // Back/forward cache: the page can come back with its JS state intact,
+    // including a pick lock left by a navigation that never completed
+    window.addEventListener('pageshow', (e) => {
+        if (e.persisted) {
+            releasePickLock();
+            logDebug('Page restored from back/forward cache: pick lock released');
+        }
+    });
+
     // Attach the shortcut before the settings request, so it works (with the
     // default key) even if that request is slow or fails
     document.addEventListener('keydown', (e) => {
@@ -1244,6 +1282,13 @@ const init = async () => {
 
         // Check if the shortcut key is pressed
         if (matchesShortcutKey(e)) {
+            // Check the modifiers before anything else. Other combinations
+            // (e.g. Ctrl+= for browser zoom) must pass through untouched,
+            // including their auto-repeat.
+            const isShiftOnly = e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey;
+            const isPlain = !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey;
+            if (!isShiftOnly && !isPlain) return;
+
             // Holding the key sends repeated keydown events: never pick on those
             if (e.repeat) {
                 e.preventDefault();
@@ -1251,20 +1296,19 @@ const init = async () => {
             }
 
             // Shift + key = force refresh (clear cache and history)
-            if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            if (isShiftOnly) {
                 e.preventDefault();
                 flashRandomButton();
                 logDebug('Shift + shortcut key pressed: force refresh');
                 playRandomSong(true); // Force refresh
             }
             // Just the key (no modifiers) = normal random play
-            else if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
+            else {
                 e.preventDefault();
                 flashRandomButton();
                 logDebug('Shortcut key pressed:', currentShortcutKey);
                 playRandomSong();
             }
-            // Other modifier combinations are ignored to avoid conflicts
         }
     });
 
