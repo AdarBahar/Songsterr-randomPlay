@@ -4,6 +4,26 @@ Entries are added in reverse chronological order.
 
 ---
 
+## 2026-11-02: Repeat Pick & Shortcut Fixes (v1.6.3)
+**Branch**: claude/code-review-qa-o9h3k4 (PR #9, merged)
+**Status**: v1.6.3 tagged; GitHub release published with both zips, marked latest; Firefox approved and live 2026-11-02 (AMO serves 1.6.3, owner confirmed the update in Firefox); Chrome submitted 2026-11-02, review pending; landing deployed to bahar.co.il 2026-11-02 (live changelog shows v1.6.3)
+
+**Review (PR #9)**: read `content.js`, `background.js` and `options.js`. No blocking defect found. The reserved-key list is the same in `content.js` and `options.js` (keep both in sync). There are no automated tests; the manual checklist was run locally by the owner.
+
+**Fixes**:
+- One pick at a time: `isPicking` lock stops repeated keydown, double-click and repeated click picks
+- Held key: `e.repeat` never starts a pick; other modifier combinations pass through untouched
+- Navigation watchdog (8 s) releases the lock and shows an error if the page stays; `pageshow` with `persisted` releases it after back/forward cache restore
+- Favorites request has a 10 s `AbortController` timeout with its own message
+- Reserved keys (F-keys, Escape, Tab, Enter, arrows, modifiers, etc.) cannot be the shortcut; stored reserved values fall back to `=` (`usableShortcutKey`); options page rejects them with a snackbar
+- Shortcut listener is attached before the settings request, so the default key works if settings are slow
+- One `getSettings` message replaces four round trips (`background.js`)
+- Shift refresh notification moved into `playRandomSong`, so it shows once for both entry points
+
+**Release**: version 1.6.3 in `manifest.json`, `package.json` and `package-lock.json`; `npm run compile` and `npm run compile:firefox`; README version history and landing changelog updated; commit `32fd138`.
+
+---
+
 ## 2026-10-26: Inbox Badge Clone Fix (v1.6.2)
 **Branch**: toolbar-badge-fix (PR #7, merged)
 **Status**: v1.6.2 tagged; GitHub release published with both zips; submitted to the Chrome Web Store and Firefox Add-ons 2026-10-26; Firefox approved the same day, Chrome approved 2026-10-27; landing deployed to bahar.co.il 2026-10-26 (live site shows v1.6.2)
