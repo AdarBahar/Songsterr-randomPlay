@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const SNACKBAR_DURATION_MS = 2000;
     let snackbarTimer = null;
 
+    // Keys the browser or the page needs for itself (F5 would block browser
+    // refresh on Songsterr). Keep in sync with content.js.
+    const RESERVED_SHORTCUT_KEY_PATTERN = /^(F\d{1,2}|Escape|Tab|Enter|Backspace|Delete|Insert|Home|End|PageUp|PageDown|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|PrintScreen|Pause|ContextMenu|Shift|Control|Alt|Meta|CapsLock|NumLock|ScrollLock)$/;
+
     /**
      * Shows a brief confirmation snackbar. Repeated calls restart the timer.
      * @param {string} message
@@ -108,7 +112,12 @@ document.addEventListener('DOMContentLoaded', () => {
         (data) => {
             if (!chrome.runtime.lastError) {
                 elements.debugToggle.checked = data.debug || false;
-                elements.currentKey.textContent = data.shortcutKey || '=';
+                // Show the key the content script actually uses (reserved keys fall back to '=')
+                const storedKey = data.shortcutKey;
+                const usableKey = typeof storedKey === 'string' && storedKey && !RESERVED_SHORTCUT_KEY_PATTERN.test(storedKey)
+                    ? storedKey
+                    : '=';
+                elements.currentKey.textContent = usableKey;
                 setActiveInstrument(data.preferredInstrument || 'default');
 
                 customWeights = resolveCustomWeights(data);
@@ -272,6 +281,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const pressedKey = e.key;
+
+            // Reserved keys would block something the browser or page needs
+            if (RESERVED_SHORTCUT_KEY_PATTERN.test(pressedKey)) {
+                elements.changeKeyBtn.textContent = 'Key not allowed';
+                elements.changeKeyBtn.classList.remove('listening');
+                showSnackbar(`"${pressedKey}" is used by the browser. Pick another key.`, true);
+                setTimeout(() => {
+                    elements.changeKeyBtn.textContent = 'Change Key';
+                    isListening = false;
+                }, 2000);
+                document.removeEventListener('keydown', handleKeyPress);
+                return;
+            }
 
             // Limit key length for storage
             if (pressedKey.length > 20) {

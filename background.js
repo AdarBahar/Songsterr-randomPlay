@@ -17,39 +17,25 @@ const logDebug = (...args) => {
 chrome.runtime.onInstalled.addListener(() => logDebug('Extension installed'));
 
 /**
- * Message handler for content script requests
- * Handles getDebugMode and getShortcutKey actions
+ * Message handler for content script requests.
+ * 'getSettings' returns every setting the content script needs in one
+ * round trip, instead of one message per setting.
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'getDebugMode') {
-        chrome.storage.sync.get('debug', (data) => {
-            sendResponse({ debug: data.debug || false });
-        });
-        return true; // Required for async response
-    }
-
-    if (message.action === 'getShortcutKey') {
-        chrome.storage.sync.get('shortcutKey', (data) => {
-            sendResponse({ shortcutKey: data.shortcutKey || '=' });
-        });
-        return true; // Required for async response
-    }
-
-    if (message.action === 'getPreferredInstrument') {
-        chrome.storage.sync.get('preferredInstrument', (data) => {
-            sendResponse({ preferredInstrument: data.preferredInstrument || 'default' });
-        });
-        return true; // Required for async response
-    }
-
-    if (message.action === 'getWeightSettings') {
-        chrome.storage.sync.get(['weightMode', 'newnessBoost', 'leastPlayedBoost'], (data) => {
-            sendResponse({
-                weightMode: data.weightMode || 'off',
-                newnessBoost: data.newnessBoost || 1,
-                leastPlayedBoost: data.leastPlayedBoost || 1
-            });
-        });
+    if (message.action === 'getSettings') {
+        chrome.storage.sync.get(
+            ['debug', 'shortcutKey', 'preferredInstrument', 'weightMode', 'newnessBoost', 'leastPlayedBoost'],
+            (data) => {
+                sendResponse({
+                    debug: data.debug || false,
+                    shortcutKey: data.shortcutKey || '=',
+                    preferredInstrument: data.preferredInstrument || 'default',
+                    weightMode: data.weightMode || 'off',
+                    newnessBoost: data.newnessBoost || 1,
+                    leastPlayedBoost: data.leastPlayedBoost || 1
+                });
+            }
+        );
         return true; // Required for async response
     }
 
