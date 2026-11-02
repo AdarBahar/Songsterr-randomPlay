@@ -122,7 +122,7 @@ Attach both store zips. Release notes follow the README version-history entry.
 
 ### Landing page (www.bahar.co.il/songsterr-randomSong)
 
-The folder `landing/` is a static site on the InMotion web host. The deploy tool [inmotion-deploy](https://github.com/AdarBahar/inmotion-deploy) copies it. The tool is a separate repo, cloned at `~/Code/deployment/inmotion` on the Mac. The service name is `songsterr-randomSong`.
+The folder `landing/` is a static site on the InMotion web host. The deploy tool [inmotion-deploy](https://github.com/AdarBahar/inmotion-deploy) copies it. The tool deploys the `landing/` folder of the latest `origin/main` from GitHub (a clean export in a temporary folder), not your working folder. The tool is a separate repo, cloned at `~/Code/deployment/inmotion` on the Mac. The service name is `songsterr-randomSong`.
 
 ```bash
 cd ~/Code/deployment/inmotion
@@ -131,7 +131,8 @@ python3 inmotionDeploy.py songsterr-randomSong             # asks for a yes, bac
 python3 inmotionDeploy.py songsterr-randomSong --rollback  # restores the latest backup
 ```
 
-- Run `npm run compile` first. It stamps the version into the footers of `landing/*.html`.
+- Run `npm run compile` before the release commit. It stamps the version into the footers of `landing/*.html`. Commit those files and merge them to `main`: the tool deploys only what is on `origin/main`.
+- To test a pushed branch, add `--ref <branch>` to the dry run. The tool refuses a branch that exists only on your Mac.
 - The tool saves the whole server folder to `backup/songsterr-randomSong/<time>_backup/` before it replaces files. It keeps the newest 10 backups (and 30 days).
 - It copies only changed files. When nothing changed, it makes no backup and no copy.
 - After the copy it requests `https://www.bahar.co.il/songsterr-randomSong/`. The answer must be 200.
