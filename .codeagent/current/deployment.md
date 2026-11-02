@@ -120,6 +120,23 @@ gh release create vX.Y.Z --title "vX.Y.Z — <summary>" --notes-file <notes.md> 
 
 Attach both store zips. Release notes follow the README version-history entry.
 
+### Landing page (www.bahar.co.il/songsterr-randomSong)
+
+The folder `landing/` is a static site on the InMotion web host. The deploy tool [inmotion-deploy](https://github.com/AdarBahar/inmotion-deploy) copies it. The tool is a separate repo, cloned at `~/Code/deployment/inmotion` on the Mac. The service name is `songsterr-randomSong`.
+
+```bash
+cd ~/Code/deployment/inmotion
+python3 inmotionDeploy.py songsterr-randomSong --dry-run   # shows the changed files, changes nothing
+python3 inmotionDeploy.py songsterr-randomSong             # asks for a yes, backs up, copies, checks
+python3 inmotionDeploy.py songsterr-randomSong --rollback  # restores the latest backup
+```
+
+- Run `npm run compile` first. It stamps the version into the footers of `landing/*.html`.
+- The tool saves the whole server folder to `backup/songsterr-randomSong/<time>_backup/` before it replaces files. It keeps the newest 10 backups (and 30 days).
+- It copies only changed files. When nothing changed, it makes no backup and no copy.
+- After the copy it requests `https://www.bahar.co.il/songsterr-randomSong/`. The answer must be 200.
+- Logs: `~/Code/deployment/inmotion/logs/`. Commands and configuration: the README of the tool.
+
 ### Firefox Add-ons (AMO) Submission
 
 1. **Build and package**
