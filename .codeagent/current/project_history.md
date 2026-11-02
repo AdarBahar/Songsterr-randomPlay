@@ -6,7 +6,7 @@ Entries are added in reverse chronological order.
 
 ## 2026-11-02: Repeat Pick & Shortcut Fixes (v1.6.3)
 **Branch**: claude/code-review-qa-o9h3k4 (PR #9, merged)
-**Status**: v1.6.3 tagged; GitHub release published with both zips, marked latest; Firefox approved and live 2026-11-02 (AMO serves 1.6.3, owner confirmed the update in Firefox); Chrome submitted 2026-11-02, review pending; landing deployed to bahar.co.il 2026-11-02 (live changelog shows v1.6.3)
+**Status**: v1.6.3 tagged; GitHub release published with both zips, marked latest; Firefox approved and live 2026-11-02 (AMO serves 1.6.3, owner confirmed the update in Firefox); Chrome approved and live 2026-11-02 (public listing shows 1.6.3); landing deployed to bahar.co.il 2026-11-02 (live changelog shows v1.6.3)
 
 **Review (PR #9)**: read `content.js`, `background.js` and `options.js`. No blocking defect found. The reserved-key list is the same in `content.js` and `options.js` (keep both in sync). There are no automated tests; the manual checklist was run locally by the owner.
 

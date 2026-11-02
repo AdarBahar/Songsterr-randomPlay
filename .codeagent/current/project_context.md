@@ -83,7 +83,7 @@ Enable Songsterr users to discover and practice songs from their favorites list 
 
 ## Current State (as of v1.4.1)
 
-- ✅ **Live on the Chrome Web Store** (v1.6.2, approved 2026-10-27; v1.6.3 submitted 2026-11-02, review pending)
+- ✅ **Live on the Chrome Web Store** (v1.6.3, approved 2026-11-02; v1.6.2 approved 2026-10-27)
 - 🦊 **Live on Firefox Add-ons** (v1.6.3, approved 2026-11-02; v1.6.2 approved 2026-10-26; `npm run compile:firefox`, Firefox 140+)
 - 🌐 **Landing page** on bahar.co.il shows v1.6.3 (deployed 2026-11-02)
 - ✅ Fully functional with current Songsterr layout
